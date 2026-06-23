@@ -10,12 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as MinhasRifasRouteImport } from './routes/minhas-rifas'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RifaIdRouteImport } from './routes/rifa.$id'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MinhasRifasRoute = MinhasRifasRouteImport.update({
+  id: '/minhas-rifas',
+  path: '/minhas-rifas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -28,35 +35,48 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RifaIdRoute = RifaIdRouteImport.update({
+  id: '/rifa/$id',
+  path: '/rifa/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/minhas-rifas': typeof MinhasRifasRoute
   '/register': typeof RegisterRoute
+  '/rifa/$id': typeof RifaIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/minhas-rifas': typeof MinhasRifasRoute
   '/register': typeof RegisterRoute
+  '/rifa/$id': typeof RifaIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/minhas-rifas': typeof MinhasRifasRoute
   '/register': typeof RegisterRoute
+  '/rifa/$id': typeof RifaIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/register'
+  fullPaths: '/' | '/login' | '/minhas-rifas' | '/register' | '/rifa/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/register'
-  id: '__root__' | '/' | '/login' | '/register'
+  to: '/' | '/login' | '/minhas-rifas' | '/register' | '/rifa/$id'
+  id: '__root__' | '/' | '/login' | '/minhas-rifas' | '/register' | '/rifa/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  MinhasRifasRoute: typeof MinhasRifasRoute
   RegisterRoute: typeof RegisterRoute
+  RifaIdRoute: typeof RifaIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -66,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/minhas-rifas': {
+      id: '/minhas-rifas'
+      path: '/minhas-rifas'
+      fullPath: '/minhas-rifas'
+      preLoaderRoute: typeof MinhasRifasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -82,13 +109,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rifa/$id': {
+      id: '/rifa/$id'
+      path: '/rifa/$id'
+      fullPath: '/rifa/$id'
+      preLoaderRoute: typeof RifaIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  MinhasRifasRoute: MinhasRifasRoute,
   RegisterRoute: RegisterRoute,
+  RifaIdRoute: RifaIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
