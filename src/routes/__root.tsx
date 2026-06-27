@@ -86,6 +86,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Participe de rifas online com pagamento via PIX. Sorteios transparentes, prêmios incríveis." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "RifasOnline — Plataforma de rifas digitais" },
+      { name: "twitter:description", content: "Participe de rifas online com pagamento via PIX. Sorteios transparentes, prêmios incríveis." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/52MkcxcI4CeUo7toSHpKUtTAdTV2/social-images/social-1782568968370-Frame_1.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/52MkcxcI4CeUo7toSHpKUtTAdTV2/social-images/social-1782568968370-Frame_1.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
