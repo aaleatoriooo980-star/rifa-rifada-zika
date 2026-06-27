@@ -18,6 +18,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as RifaIdRouteImport } from './routes/rifa.$id'
 import { Route as AdminSorteiosRouteImport } from './routes/admin.sorteios'
 import { Route as AdminRifasRouteImport } from './routes/admin.rifas'
+import { Route as AdminRifasIndexRouteImport } from './routes/admin.rifas.index'
 import { Route as AdminRifasNovaRouteImport } from './routes/admin.rifas.nova'
 import { Route as AdminRifasIdRouteImport } from './routes/admin.rifas.$id'
 
@@ -66,6 +67,11 @@ const AdminRifasRoute = AdminRifasRouteImport.update({
   path: '/rifas',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRifasIndexRoute = AdminRifasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRifasRoute,
+} as any)
 const AdminRifasNovaRoute = AdminRifasNovaRouteImport.update({
   id: '/nova',
   path: '/nova',
@@ -89,18 +95,19 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/admin/rifas/$id': typeof AdminRifasIdRoute
   '/admin/rifas/nova': typeof AdminRifasNovaRoute
+  '/admin/rifas/': typeof AdminRifasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/minhas-rifas': typeof MinhasRifasRoute
   '/register': typeof RegisterRoute
-  '/admin/rifas': typeof AdminRifasRouteWithChildren
   '/admin/sorteios': typeof AdminSorteiosRoute
   '/rifa/$id': typeof RifaIdRoute
   '/admin': typeof AdminIndexRoute
   '/admin/rifas/$id': typeof AdminRifasIdRoute
   '/admin/rifas/nova': typeof AdminRifasNovaRoute
+  '/admin/rifas': typeof AdminRifasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -115,6 +122,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/admin/rifas/$id': typeof AdminRifasIdRoute
   '/admin/rifas/nova': typeof AdminRifasNovaRoute
+  '/admin/rifas/': typeof AdminRifasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -130,18 +138,19 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/rifas/$id'
     | '/admin/rifas/nova'
+    | '/admin/rifas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/minhas-rifas'
     | '/register'
-    | '/admin/rifas'
     | '/admin/sorteios'
     | '/rifa/$id'
     | '/admin'
     | '/admin/rifas/$id'
     | '/admin/rifas/nova'
+    | '/admin/rifas'
   id:
     | '__root__'
     | '/'
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/rifas/$id'
     | '/admin/rifas/nova'
+    | '/admin/rifas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -231,6 +241,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRifasRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/rifas/': {
+      id: '/admin/rifas/'
+      path: '/'
+      fullPath: '/admin/rifas/'
+      preLoaderRoute: typeof AdminRifasIndexRouteImport
+      parentRoute: typeof AdminRifasRoute
+    }
     '/admin/rifas/nova': {
       id: '/admin/rifas/nova'
       path: '/nova'
@@ -251,11 +268,13 @@ declare module '@tanstack/react-router' {
 interface AdminRifasRouteChildren {
   AdminRifasIdRoute: typeof AdminRifasIdRoute
   AdminRifasNovaRoute: typeof AdminRifasNovaRoute
+  AdminRifasIndexRoute: typeof AdminRifasIndexRoute
 }
 
 const AdminRifasRouteChildren: AdminRifasRouteChildren = {
   AdminRifasIdRoute: AdminRifasIdRoute,
   AdminRifasNovaRoute: AdminRifasNovaRoute,
+  AdminRifasIndexRoute: AdminRifasIndexRoute,
 }
 
 const AdminRifasRouteWithChildren = AdminRifasRoute._addFileChildren(
