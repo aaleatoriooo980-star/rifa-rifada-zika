@@ -3,7 +3,8 @@ import { useRifas } from "@/context/RifasContext";
 import { useAuth } from "@/context/AuthContext";
 import { StatCard } from "@/components/admin/StatCard";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatBRL } from "@/lib/format";
+import { Badge } from "@/components/ui/badge";
+import { formatBRL, formatDate, formatDateTime } from "@/lib/format";
 import {
   Ticket,
   CheckCircle2,
@@ -12,6 +13,8 @@ import {
   Users,
   Clock,
   CheckCheck,
+  ShoppingBag,
+  CalendarClock,
 } from "lucide-react";
 import {
   BarChart,
@@ -26,6 +29,7 @@ import {
   Area,
   CartesianGrid,
 } from "recharts";
+
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Dashboard — Admin" }] }),
@@ -186,6 +190,103 @@ function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="shadow-soft">
+          <CardContent className="p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4 text-primary" />
+              <h3 className="font-display font-semibold">Últimas compras</h3>
+            </div>
+            <div className="space-y-3">
+              {orders.length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhuma compra ainda.</p>
+              )}
+              {[...orders]
+                .sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1))
+                .slice(0, 6)
+                .map((o) => {
+                  const buyer = users.find((u) => u.id === o.userId);
+                  const rifa = rifas.find((r) => r.id === o.rifaId);
+                  return (
+                    <div
+                      key={o.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-medium">
+                          {buyer?.name ?? "Usuário"}
+                        </div>
+                        <div className="truncate text-xs text-muted-foreground">
+                          {rifa?.title} · {o.numbers.length} nº ·{" "}
+                          {formatDateTime(o.createdAt)}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">{formatBRL(o.total)}</div>
+                        <Badge
+                          variant={o.status === "pago" ? "default" : "secondary"}
+                          className={
+                            o.status === "pago"
+                              ? "bg-success text-success-foreground"
+                              : ""
+                          }
+                        >
+                          {o.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-soft">
+          <CardContent className="p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-primary" />
+              <h3 className="font-display font-semibold">Próximos sorteios</h3>
+            </div>
+            <div className="space-y-3">
+              {rifas
+                .filter((r) => r.status === "ativa")
+                .sort((a, b) => (a.drawDate ?? "").localeCompare(b.drawDate ?? ""))
+                .slice(0, 6)
+                .map((r) => {
+                  const soldN = numbers.filter(
+                    (n) => n.rifaId === r.id && n.status === "vendido",
+                  ).length;
+                  return (
+                    <div
+                      key={r.id}
+                      className="flex items-center gap-3 rounded-lg border bg-muted/20 p-3"
+                    >
+                      <img
+                        src={r.image}
+                        alt=""
+                        className="h-12 w-16 rounded object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium">{r.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {soldN}/{r.totalNumbers} vendidos · sorteio{" "}
+                          {formatDate(r.drawDate)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              {rifas.filter((r) => r.status === "ativa").length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma rifa ativa no momento.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
+

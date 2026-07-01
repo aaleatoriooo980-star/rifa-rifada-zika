@@ -21,8 +21,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { formatBRL } from "@/lib/format";
-import { Edit, Plus, Users, Lock, X } from "lucide-react";
+import { Edit, Plus, Users, Lock, X, Share2 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+
 
 export const Route = createFileRoute("/admin/rifas/")({
   head: () => ({ meta: [{ title: "Rifas — Admin" }] }),
@@ -33,8 +35,24 @@ function AdminRifas() {
   const { rifas, numbers, closeRifa, cancelRifa, getBuyersForRifa } = useRifas();
   const { users } = useAuth();
   const [buyersOf, setBuyersOf] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<
+    { kind: "close" | "cancel"; id: string; title: string } | null
+  >(null);
 
   const buyers = buyersOf ? getBuyersForRifa(buyersOf) : [];
+
+  const shareRifa = async (id: string, title: string) => {
+    const url = `${window.location.origin}/rifa/${id}`;
+    if ((navigator as any).share) {
+      try {
+        await (navigator as any).share({ title, url });
+        return;
+      } catch {}
+    }
+    await navigator.clipboard.writeText(url);
+    toast.success("Link da rifa copiado!");
+  };
+
 
   return (
     <div className="space-y-6">
