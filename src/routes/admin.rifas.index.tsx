@@ -21,8 +21,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { formatBRL } from "@/lib/format";
-import { Edit, Plus, Users, Lock, X } from "lucide-react";
+import { Edit, Plus, Users, Lock, X, Share2 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+
 
 export const Route = createFileRoute("/admin/rifas/")({
   head: () => ({ meta: [{ title: "Rifas — Admin" }] }),
@@ -33,8 +35,24 @@ function AdminRifas() {
   const { rifas, numbers, closeRifa, cancelRifa, getBuyersForRifa } = useRifas();
   const { users } = useAuth();
   const [buyersOf, setBuyersOf] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<
+    { kind: "close" | "cancel"; id: string; title: string } | null
+  >(null);
 
   const buyers = buyersOf ? getBuyersForRifa(buyersOf) : [];
+
+  const shareRifa = async (id: string, title: string) => {
+    const url = `${window.location.origin}/rifa/${id}`;
+    if ((navigator as any).share) {
+      try {
+        await (navigator as any).share({ title, url });
+        return;
+      } catch {}
+    }
+    await navigator.clipboard.writeText(url);
+    toast.success("Link da rifa copiado!");
+  };
+
 
   return (
     <div className="space-y-6">
@@ -105,30 +123,36 @@ function AdminRifas() {
                           >
                             <Users className="h-4 w-4" />
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => shareRifa(r.id, r.title)}
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </Button>
                           {r.status === "ativa" && (
                             <>
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => {
-                                  closeRifa(r.id);
-                                  toast.success("Rifa encerrada");
-                                }}
+                                onClick={() =>
+                                  setConfirm({ kind: "close", id: r.id, title: r.title })
+                                }
                               >
                                 <Lock className="h-4 w-4" />
                               </Button>
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => {
-                                  cancelRifa(r.id);
-                                  toast.success("Rifa cancelada");
-                                }}
+                                onClick={() =>
+                                  setConfirm({ kind: "cancel", id: r.id, title: r.title })
+                                }
                               >
                                 <X className="h-4 w-4" />
                               </Button>
                             </>
                           )}
+
                         </div>
                       </TableCell>
                     </TableRow>
@@ -176,6 +200,35 @@ function AdminRifas() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!confirm}
+        onOpenChange={(o) => !o && setConfirm(null)}
+        title={
+          confirm?.kind === "close"
+            ? `Encerrar "${confirm.title}"?`
+            : `Cancelar "${confirm?.title}"?`
+        }
+        description={
+          confirm?.kind === "close"
+            ? "A rifa deixará de aceitar novas compras. Você poderá realizar o sorteio."
+            : "A rifa será marcada como cancelada. Esta ação não pode ser desfeita."
+        }
+        destructive={confirm?.kind === "cancel"}
+        confirmLabel={confirm?.kind === "close" ? "Encerrar" : "Cancelar rifa"}
+        onConfirm={() => {
+          if (!confirm) return;
+          if (confirm.kind === "close") {
+            closeRifa(confirm.id);
+            toast.success("Rifa encerrada");
+          } else {
+            cancelRifa(confirm.id);
+            toast.success("Rifa cancelada");
+          }
+          setConfirm(null);
+        }}
+      />
     </div>
   );
 }
+
