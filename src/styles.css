@@ -145,3 +145,31 @@
 @utility bg-gradient-hero {
   background-image: var(--gradient-hero);
 }
+@utility hover-scale {
+  transition: transform 0.2s ease;
+}
+@utility hover-elevate {
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.hover-scale:hover { transform: scale(1.03); }
+.hover-elevate:hover { transform: translateY(-2px); box-shadow: var(--shadow-elevated); }
+
+@keyframes ripple-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.12); box-shadow: 0 0 0 6px oklch(0.65 0.17 150 / 0.35); }
+  100% { transform: scale(1.05); box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes pulse-win {
+  0%, 100% { background-color: oklch(0.65 0.17 150 / 0.4); }
+  50% { background-color: oklch(0.65 0.17 150 / 0.85); }
+}
+.animate-ripple-pop { animation: ripple-pop 300ms ease-out; }
+.animate-pulse-win { animation: pulse-win 500ms ease-in-out 3; }
+
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px oklch(0.62 0.16 155 / 0.25);
+  border-color: var(--ring);
+}
+
