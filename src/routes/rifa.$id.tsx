@@ -1,15 +1,20 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import confetti from "canvas-confetti";
 import { useRifas } from "@/context/RifasContext";
 import { useAuth } from "@/context/AuthContext";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { NumbersGrid } from "@/components/rifa/NumbersGrid";
 import { PixModal } from "@/components/rifa/PixModal";
+import { CountdownTimer } from "@/components/rifa/CountdownTimer";
+import { ProgressBlock } from "@/components/rifa/ProgressBlock";
+import { RifaStats } from "@/components/rifa/RifaStats";
+import { QuickBuyBar } from "@/components/rifa/QuickBuyBar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatBRL, formatDate } from "@/lib/format";
-import { ArrowLeft, Shuffle, X, Trophy } from "lucide-react";
+import { formatBRL } from "@/lib/format";
+import { ArrowLeft, Share2, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/rifa/$id")({
@@ -25,6 +30,7 @@ function RifaDetail() {
   const [selected, setSelected] = useState<number[]>([]);
   const [pixOpen, setPixOpen] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [flashing, setFlashing] = useState<number[]>([]);
 
   const numbers = useMemo(
     () => (rifa ? getNumbersForRifa(rifa.id).sort((a, b) => a.number - b.number) : []),
@@ -46,7 +52,10 @@ function RifaDetail() {
   }
 
   const sold = numbers.filter((n) => n.status === "vendido").length;
-  const available = numbers.filter((n) => n.status === "disponivel");
+  const buyers = new Set(
+    numbers.filter((n) => n.status === "vendido" && n.userId).map((n) => n.userId),
+  ).size;
+  const raised = sold * rifa.pricePerNumber;
   const winnerName = rifa.winnerUserId
     ? users.find((u) => u.id === rifa.winnerUserId)?.name
     : undefined;
@@ -55,12 +64,6 @@ function RifaDetail() {
     const num = numbers.find((x) => x.number === n);
     if (!num || num.status === "vendido") return;
     setSelected((s) => (s.includes(n) ? s.filter((x) => x !== n) : [...s, n]));
-  };
-
-  const random = (qty = 5) => {
-    const pool = available.filter((a) => !selected.includes(a.number));
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    setSelected((s) => [...s, ...shuffled.slice(0, qty).map((n) => n.number)]);
   };
 
   const buy = () => {
@@ -81,11 +84,32 @@ function RifaDetail() {
 
   const onPaid = () => {
     if (orderId) confirmPayment(orderId);
+    const bought = [...selected];
     setPixOpen(false);
     setSelected([]);
     setOrderId(null);
-    toast.success("Pagamento confirmado! 🎉");
-    navigate({ to: "/minhas-rifas" });
+    setFlashing(bought);
+    setTimeout(() => setFlashing([]), 1600);
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.7 },
+      colors: ["#10b981", "#34d399", "#065f46"],
+    });
+    toast.success("Pagamento confirmado! 🎉 Boa sorte!");
+  };
+
+  const shareRifa = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const text = `Concorra a ${rifa.prize} na rifa "${rifa.title}"! ${url}`;
+    if ((navigator as any).share) {
+      try {
+        await (navigator as any).share({ title: rifa.title, text, url });
+        return;
+      } catch {}
+    }
+    await navigator.clipboard.writeText(text);
+    toast.success("Link copiado para compartilhar!");
   };
 
   return (
@@ -117,18 +141,36 @@ function RifaDetail() {
                     <Badge variant="secondary">Encerrada</Badge>
                   )}
                 </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={shareRifa}
+                  className="absolute right-4 top-4 shadow-soft"
+                >
+                  <Share2 className="mr-1 h-4 w-4" /> Compartilhar
+                </Button>
               </div>
               <CardContent className="space-y-3 p-6">
                 <h1 className="font-display text-3xl font-bold">{rifa.title}</h1>
                 <p className="text-muted-foreground">{rifa.description}</p>
-                <div className="flex flex-wrap gap-4 pt-2 text-sm">
-                  <Stat label="Valor por número" value={formatBRL(rifa.pricePerNumber)} />
-                  <Stat label="Total" value={rifa.totalNumbers.toString()} />
-                  <Stat label="Vendidos" value={sold.toString()} />
-                  <Stat label="Sorteio" value={formatDate(rifa.drawDate)} />
+                <div className="pt-1 text-sm">
+                  <span className="text-muted-foreground">Valor por número: </span>
+                  <span className="font-display text-xl font-bold text-primary">
+                    {formatBRL(rifa.pricePerNumber)}
+                  </span>
                 </div>
               </CardContent>
             </Card>
+
+            {rifa.status === "ativa" && <CountdownTimer target={rifa.drawDate} />}
+            <ProgressBlock sold={sold} total={rifa.totalNumbers} />
+            <RifaStats
+              buyers={buyers}
+              sold={sold}
+              raised={raised}
+              drawDate={rifa.drawDate}
+              prizesCount={1}
+            />
 
             {rifa.status === "encerrada" && rifa.winnerNumber && (
               <Card className="border-success/40 bg-success/5 shadow-soft">
@@ -157,28 +199,29 @@ function RifaDetail() {
                     <h2 className="font-display text-lg font-bold">
                       Escolha seus números
                     </h2>
-                    <div className="mt-1 flex gap-3 text-xs text-muted-foreground">
+                    <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
                       <Legend color="bg-success/40" label="Disponível" />
                       <Legend color="bg-warning/50" label="Aguardando" />
                       <Legend color="bg-destructive/30" label="Vendido" />
                     </div>
                   </div>
-                  {rifa.status === "ativa" && (
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => random(5)}>
-                        <Shuffle className="mr-1 h-3.5 w-3.5" /> +5 aleatórios
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setSelected([])}>
-                        <X className="mr-1 h-3.5 w-3.5" /> Limpar
-                      </Button>
-                    </div>
-                  )}
                 </div>
+
+                {rifa.status === "ativa" && (
+                  <QuickBuyBar
+                    numbers={numbers}
+                    selected={selected}
+                    onChange={setSelected}
+                    currentUserId={user?.id}
+                  />
+                )}
+
                 <NumbersGrid
                   numbers={numbers}
                   selected={selected}
                   onToggle={toggle}
                   currentUserId={user?.id}
+                  flashing={flashing}
                 />
               </CardContent>
             </Card>
@@ -242,15 +285,6 @@ function RifaDetail() {
         numbers={selected}
         pricePerNumber={rifa.pricePerNumber}
       />
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg bg-muted/40 px-3 py-2">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="font-semibold">{value}</div>
     </div>
   );
 }
