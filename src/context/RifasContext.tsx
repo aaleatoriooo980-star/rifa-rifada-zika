@@ -130,6 +130,20 @@ export function RifasProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const archiveRifa = useCallback((id: string) => {
+    setState((s) => ({
+      ...s,
+      rifas: s.rifas.map((r) => (r.id === id ? { ...r, archived: true } : r)),
+    }));
+  }, []);
+
+  const unarchiveRifa = useCallback((id: string) => {
+    setState((s) => ({
+      ...s,
+      rifas: s.rifas.map((r) => (r.id === id ? { ...r, archived: false } : r)),
+    }));
+  }, []);
+
   const reserveNumbers: RifasContextValue["reserveNumbers"] = useCallback(
     (rifaId, nums, userId) => {
       const rifa = state.rifas.find((r) => r.id === rifaId)!;
