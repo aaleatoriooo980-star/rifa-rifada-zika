@@ -128,6 +128,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <RifasProvider>
+          <PushBridge />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           <Toaster richColors position="top-right" />
@@ -135,4 +136,11 @@ function RootComponent() {
       </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+function PushBridge() {
+  const { user } = useAuth();
+  const { rifas, orders } = useRifas();
+  usePushScheduler(user, rifas, orders);
+  return null;
 }
