@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { RifaCard } from "@/components/rifa/RifaCard";
+import { ResultModal } from "@/components/rifa/ResultModal";
 import { useRifas } from "@/context/RifasContext";
 import { Sparkles, ShieldCheck, Zap } from "lucide-react";
+import type { Rifa } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -19,10 +22,13 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const { rifas, numbers } = useRifas();
+  const { rifas, numbers, draws } = useRifas();
+  const [resultRifa, setResultRifa] = useState<Rifa | null>(null);
 
+  const visible = rifas.filter((r) => !r.archived);
   const soldCount = (rifaId: string) =>
     numbers.filter((n) => n.rifaId === rifaId && n.status === "vendido").length;
+  const currentDraw = resultRifa ? draws.find((d) => d.rifaId === resultRifa.id) : undefined;
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,17 +67,31 @@ function HomePage() {
               Rifas em destaque
             </h2>
             <p className="mt-1 text-muted-foreground">
-              {rifas.filter((r) => r.status === "ativa").length} rifas ativas no momento
+              {visible.filter((r) => r.status === "ativa").length} rifas ativas no momento
             </p>
           </div>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {rifas.map((r) => (
-            <RifaCard key={r.id} rifa={r} sold={soldCount(r.id)} />
+          {visible.map((r) => (
+            <RifaCard
+              key={r.id}
+              rifa={r}
+              sold={soldCount(r.id)}
+              onOpenResult={setResultRifa}
+            />
           ))}
         </div>
       </section>
+
+      {resultRifa && (
+        <ResultModal
+          open={!!resultRifa}
+          onOpenChange={(o) => !o && setResultRifa(null)}
+          rifa={resultRifa}
+          draw={currentDraw}
+        />
+      )}
 
       <footer className="border-t bg-muted/30 py-8">
         <div className="mx-auto max-w-7xl px-4 text-center text-sm text-muted-foreground sm:px-6 lg:px-8">
