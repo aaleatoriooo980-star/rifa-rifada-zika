@@ -24,6 +24,8 @@ interface RifasContextValue extends State {
   updateRifa: (id: string, patch: Partial<Rifa>) => void;
   closeRifa: (id: string) => void;
   cancelRifa: (id: string) => void;
+  archiveRifa: (id: string) => void;
+  unarchiveRifa: (id: string) => void;
   reserveNumbers: (
     rifaId: string,
     nums: number[],
