@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shuffle, X, Plus } from "lucide-react";
+import { Edit3, X, Plus } from "lucide-react";
 import type { RifaNumber } from "@/lib/types";
 
 interface Props {
@@ -8,9 +8,17 @@ interface Props {
   onChange: (next: number[]) => void;
   currentUserId?: string;
   disabled?: boolean;
+  onOpenChoose?: () => void;
 }
 
-export function QuickBuyBar({ numbers, selected, onChange, currentUserId, disabled }: Props) {
+export function QuickBuyBar({
+  numbers,
+  selected,
+  onChange,
+  currentUserId,
+  disabled,
+  onOpenChoose,
+}: Props) {
   const availablePool = numbers.filter(
     (n) =>
       n.status === "disponivel" ||
@@ -41,15 +49,17 @@ export function QuickBuyBar({ numbers, selected, onChange, currentUserId, disabl
           {q}
         </Button>
       ))}
-      <Button
-        size="sm"
-        variant="outline"
-        disabled={disabled}
-        onClick={() => addRandom(50)}
-        className="hover-scale"
-      >
-        <Shuffle className="mr-1 h-3.5 w-3.5" /> Aleatório
-      </Button>
+      {onOpenChoose && (
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={disabled}
+          onClick={onOpenChoose}
+          className="hover-scale"
+        >
+          <Edit3 className="mr-1 h-3.5 w-3.5" /> Escolher Número
+        </Button>
+      )}
       <Button
         size="sm"
         variant="ghost"

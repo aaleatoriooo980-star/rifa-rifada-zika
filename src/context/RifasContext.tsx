@@ -24,6 +24,8 @@ interface RifasContextValue extends State {
   updateRifa: (id: string, patch: Partial<Rifa>) => void;
   closeRifa: (id: string) => void;
   cancelRifa: (id: string) => void;
+  archiveRifa: (id: string) => void;
+  unarchiveRifa: (id: string) => void;
   reserveNumbers: (
     rifaId: string,
     nums: number[],
@@ -125,6 +127,20 @@ export function RifasProvider({ children }: { children: ReactNode }) {
     setState((s) => ({
       ...s,
       rifas: s.rifas.map((r) => (r.id === id ? { ...r, status: "cancelada" } : r)),
+    }));
+  }, []);
+
+  const archiveRifa = useCallback((id: string) => {
+    setState((s) => ({
+      ...s,
+      rifas: s.rifas.map((r) => (r.id === id ? { ...r, archived: true } : r)),
+    }));
+  }, []);
+
+  const unarchiveRifa = useCallback((id: string) => {
+    setState((s) => ({
+      ...s,
+      rifas: s.rifas.map((r) => (r.id === id ? { ...r, archived: false } : r)),
     }));
   }, []);
 
@@ -237,6 +253,8 @@ export function RifasProvider({ children }: { children: ReactNode }) {
       updateRifa,
       closeRifa,
       cancelRifa,
+      archiveRifa,
+      unarchiveRifa,
       reserveNumbers,
       confirmPayment,
       getNumbersForRifa,
@@ -249,6 +267,8 @@ export function RifasProvider({ children }: { children: ReactNode }) {
       updateRifa,
       closeRifa,
       cancelRifa,
+      archiveRifa,
+      unarchiveRifa,
       reserveNumbers,
       confirmPayment,
       getNumbersForRifa,

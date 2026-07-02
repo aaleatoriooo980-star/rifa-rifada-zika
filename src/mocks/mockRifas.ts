@@ -17,7 +17,7 @@ export const mockRifas: Rifa[] = [
     image: iphone,
     status: "ativa",
     createdAt: "2026-06-01T10:00:00.000Z",
-    drawDate: "2026-07-30T20:00:00.000Z",
+    drawDate: "2026-08-30T20:00:00.000Z",
   },
   {
     id: "r-moto",
@@ -30,7 +30,7 @@ export const mockRifas: Rifa[] = [
     image: moto,
     status: "ativa",
     createdAt: "2026-05-15T10:00:00.000Z",
-    drawDate: "2026-08-15T20:00:00.000Z",
+    drawDate: "2026-09-15T20:00:00.000Z",
   },
   {
     id: "r-ps",

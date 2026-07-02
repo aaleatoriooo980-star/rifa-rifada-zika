@@ -8,6 +8,7 @@ export interface User {
   role: Role;
   cpf?: string;
   phone?: string;
+  notificationsEnabled?: boolean;
 }
 
 export type RifaStatus = "ativa" | "encerrada" | "cancelada";
@@ -17,10 +18,12 @@ export interface Rifa {
   title: string;
   description: string;
   prize: string;
+  prizes?: string[];
   pricePerNumber: number;
   totalNumbers: number;
   image: string;
   status: RifaStatus;
+  archived?: boolean;
   createdAt: string;
   drawDate?: string;
   winnerNumber?: number;

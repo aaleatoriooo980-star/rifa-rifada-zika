@@ -11,9 +11,10 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { AuthProvider } from "@/context/AuthContext";
-import { RifasProvider } from "@/context/RifasContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { RifasProvider, useRifas } from "@/context/RifasContext";
 import { Toaster } from "@/components/ui/sonner";
+import { usePushScheduler } from "@/lib/pushScheduler";
 
 function NotFoundComponent() {
   return (
@@ -128,6 +129,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <RifasProvider>
+          <PushBridge />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           <Toaster richColors position="top-right" />
@@ -135,4 +137,11 @@ function RootComponent() {
       </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+function PushBridge() {
+  const { user } = useAuth();
+  const { rifas, orders } = useRifas();
+  usePushScheduler(user, rifas, orders);
+  return null;
 }

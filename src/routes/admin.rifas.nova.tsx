@@ -24,6 +24,7 @@ function NovaRifa() {
     pricePerNumber: 5,
     totalNumbers: 100,
     drawDate: "",
+    drawTime: "",
   });
 
   const onImage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,6 +41,15 @@ function NovaRifa() {
       toast.error("Preencha os campos obrigatórios");
       return;
     }
+    if (!form.drawDate || !form.drawTime) {
+      toast.error("Informe data e hora do sorteio.");
+      return;
+    }
+    const iso = new Date(`${form.drawDate}T${form.drawTime}:00`);
+    if (iso.getTime() <= Date.now()) {
+      toast.error("A data do sorteio deve ser no futuro.");
+      return;
+    }
     const rifa = createRifa({
       title: form.title,
       description: form.description,
@@ -47,10 +57,11 @@ function NovaRifa() {
       pricePerNumber: Number(form.pricePerNumber),
       totalNumbers: Number(form.totalNumbers),
       image: form.image || "https://placehold.co/800x600/10b981/ffffff?text=Rifa",
-      drawDate: form.drawDate || undefined,
+      drawDate: iso.toISOString(),
     });
     toast.success("Rifa criada com sucesso!");
-    navigate({ to: "/admin/rifas/$id", params: { id: rifa.id } });
+    navigate({ to: "/admin/rifas" });
+    void rifa;
   };
 
   return (
@@ -120,7 +131,7 @@ function NovaRifa() {
                 />
               )}
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="price">Valor por número *</Label>
                 <Input
@@ -152,13 +163,25 @@ function NovaRifa() {
                 />
               </div>
               <div>
-                <Label htmlFor="draw">Data do sorteio</Label>
+                <Label htmlFor="draw-date">Data do sorteio *</Label>
                 <Input
-                  id="draw"
+                  id="draw-date"
                   type="date"
                   value={form.drawDate}
                   onChange={(e) => setForm({ ...form, drawDate: e.target.value })}
                   className="mt-1.5"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="draw-time">Hora do sorteio *</Label>
+                <Input
+                  id="draw-time"
+                  type="time"
+                  value={form.drawTime}
+                  onChange={(e) => setForm({ ...form, drawTime: e.target.value })}
+                  className="mt-1.5"
+                  required
                 />
               </div>
             </div>
