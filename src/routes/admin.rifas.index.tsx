@@ -1,45 +1,49 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRifas } from "@/context/RifasContext";
-import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { formatBRL } from "@/lib/format";
-import { Edit, Plus, Users, Lock, X, Share2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DataTable, type Column } from "@/components/common/DataTable";
+import { EditRifaModal } from "@/components/admin/EditRifaModal";
+import { BuyersSearch } from "@/components/admin/BuyersSearch";
+import { formatBRL, formatDateTime } from "@/lib/format";
+import { Edit, Plus, Users, Lock, X, Share2, Archive, ArchiveRestore } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
-
+import type { Rifa } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/rifas/")({
   head: () => ({ meta: [{ title: "Rifas — Admin" }] }),
   component: AdminRifas,
 });
 
+type Filter = "ativas" | "encerradas" | "arquivadas";
+
 function AdminRifas() {
-  const { rifas, numbers, closeRifa, cancelRifa, getBuyersForRifa } = useRifas();
-  const { users } = useAuth();
+  const {
+    rifas,
+    numbers,
+    closeRifa,
+    cancelRifa,
+    archiveRifa,
+    unarchiveRifa,
+  } = useRifas();
+  const [filter, setFilter] = useState<Filter>("ativas");
   const [buyersOf, setBuyersOf] = useState<string | null>(null);
+  const [editRifa, setEditRifa] = useState<Rifa | null>(null);
   const [confirm, setConfirm] = useState<
-    { kind: "close" | "cancel"; id: string; title: string } | null
+    { kind: "close" | "cancel" | "archive" | "unarchive"; id: string; title: string } | null
   >(null);
 
-  const buyers = buyersOf ? getBuyersForRifa(buyersOf) : [];
+  const filtered = useMemo(() => {
+    if (filter === "arquivadas") return rifas.filter((r) => r.archived);
+    if (filter === "encerradas")
+      return rifas.filter((r) => !r.archived && (r.status === "encerrada" || r.status === "cancelada"));
+    return rifas.filter((r) => !r.archived && r.status === "ativa");
+  }, [rifas, filter]);
 
   const shareRifa = async (id: string, title: string) => {
     const url = `${window.location.origin}/rifa/${id}`;
@@ -53,6 +57,127 @@ function AdminRifas() {
     toast.success("Link da rifa copiado!");
   };
 
+  const columns: Column<Rifa>[] = [
+    {
+      key: "title",
+      header: "Título",
+      sortable: true,
+      accessor: (r) => r.title,
+      cell: (r) => <span className="font-medium">{r.title}</span>,
+    },
+    {
+      key: "prize",
+      header: "Prêmio",
+      sortable: true,
+      accessor: (r) => r.prize,
+      cell: (r) => <span className="text-muted-foreground">{r.prize}</span>,
+    },
+    {
+      key: "price",
+      header: "Valor",
+      sortable: true,
+      accessor: (r) => r.pricePerNumber,
+      cell: (r) => formatBRL(r.pricePerNumber),
+    },
+    {
+      key: "sold",
+      header: "Vendidos",
+      sortable: true,
+      accessor: (r) =>
+        numbers.filter((n) => n.rifaId === r.id && n.status === "vendido").length,
+      cell: (r) =>
+        numbers.filter((n) => n.rifaId === r.id && n.status === "vendido").length,
+    },
+    {
+      key: "draw",
+      header: "Sorteio",
+      sortable: true,
+      accessor: (r) => r.drawDate ?? "",
+      cell: (r) => (
+        <span className="whitespace-nowrap text-xs text-muted-foreground">
+          {formatDateTime(r.drawDate)}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortable: true,
+      accessor: (r) => r.status,
+      cell: (r) => (
+        <>
+          {r.status === "ativa" && (
+            <Badge className="bg-success text-success-foreground">Ativa</Badge>
+          )}
+          {r.status === "encerrada" && <Badge variant="secondary">Encerrada</Badge>}
+          {r.status === "cancelada" && <Badge variant="destructive">Cancelada</Badge>}
+          {r.archived && (
+            <Badge variant="outline" className="ml-1">
+              Arquivada
+            </Badge>
+          )}
+        </>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Ações",
+      className: "text-right",
+      cell: (r) => (
+        <div className="flex justify-end gap-1">
+          <Button size="sm" variant="ghost" onClick={() => setEditRifa(r)} title="Editar">
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setBuyersOf(r.id)} title="Compradores">
+            <Users className="h-4 w-4" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => shareRifa(r.id, r.title)} title="Compartilhar">
+            <Share2 className="h-4 w-4" />
+          </Button>
+          {r.status === "ativa" && !r.archived && (
+            <>
+              <Button
+                size="sm"
+                variant="ghost"
+                title="Encerrar"
+                onClick={() => setConfirm({ kind: "close", id: r.id, title: r.title })}
+              >
+                <Lock className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                title="Cancelar"
+                onClick={() => setConfirm({ kind: "cancel", id: r.id, title: r.title })}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+          {r.status !== "ativa" && !r.archived && (
+            <Button
+              size="sm"
+              variant="ghost"
+              title="Arquivar"
+              onClick={() => setConfirm({ kind: "archive", id: r.id, title: r.title })}
+            >
+              <Archive className="h-4 w-4" />
+            </Button>
+          )}
+          {r.archived && (
+            <Button
+              size="sm"
+              variant="ghost"
+              title="Desarquivar"
+              onClick={() => setConfirm({ kind: "unarchive", id: r.id, title: r.title })}
+            >
+              <ArchiveRestore className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -70,97 +195,25 @@ function AdminRifas() {
         </Button>
       </div>
 
-      <Card className="shadow-soft">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Prêmio</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Vendidos</TableHead>
-                  <TableHead>Disponíveis</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rifas.map((r) => {
-                  const sold = numbers.filter(
-                    (n) => n.rifaId === r.id && n.status === "vendido",
-                  ).length;
-                  const avail = r.totalNumbers - sold;
-                  return (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-medium">{r.title}</TableCell>
-                      <TableCell className="text-muted-foreground">{r.prize}</TableCell>
-                      <TableCell>{formatBRL(r.pricePerNumber)}</TableCell>
-                      <TableCell>{sold}</TableCell>
-                      <TableCell>{avail}</TableCell>
-                      <TableCell>
-                        {r.status === "ativa" && (
-                          <Badge className="bg-success text-success-foreground">Ativa</Badge>
-                        )}
-                        {r.status === "encerrada" && (
-                          <Badge variant="secondary">Encerrada</Badge>
-                        )}
-                        {r.status === "cancelada" && (
-                          <Badge variant="destructive">Cancelada</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-1">
-                          <Button size="sm" variant="ghost" asChild>
-                            <Link to="/admin/rifas/$id" params={{ id: r.id }}>
-                              <Edit className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setBuyersOf(r.id)}
-                          >
-                            <Users className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => shareRifa(r.id, r.title)}
-                          >
-                            <Share2 className="h-4 w-4" />
-                          </Button>
-                          {r.status === "ativa" && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  setConfirm({ kind: "close", id: r.id, title: r.title })
-                                }
-                              >
-                                <Lock className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  setConfirm({ kind: "cancel", id: r.id, title: r.title })
-                                }
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
+      <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
+        <TabsList>
+          <TabsTrigger value="ativas">Ativas</TabsTrigger>
+          <TabsTrigger value="encerradas">Encerradas</TabsTrigger>
+          <TabsTrigger value="arquivadas">Arquivadas</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+      <Card className="shadow-soft">
+        <CardContent className="p-4">
+          <DataTable
+            data={filtered}
+            columns={columns}
+            rowKey={(r) => r.id}
+            searchable={(r) => `${r.title} ${r.prize}`}
+            searchPlaceholder="Pesquisar rifa..."
+            pageSize={10}
+            empty="Nenhuma rifa nesta categoria."
+          />
         </CardContent>
       </Card>
 
@@ -169,37 +222,14 @@ function AdminRifas() {
           <DialogHeader>
             <DialogTitle>Compradores</DialogTitle>
             <DialogDescription>
-              Lista de usuários com números pagos nesta rifa.
+              Pesquise por nome ou telefone e veja os números adquiridos.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-            {buyers.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Nenhum comprador ainda.
-              </p>
-            )}
-            {buyers.map((b) => {
-              const u = users.find((x) => x.id === b.userId);
-              return (
-                <div
-                  key={b.userId}
-                  className="rounded-lg border bg-muted/30 p-3"
-                >
-                  <div className="font-medium">{u?.name ?? "Usuário"}</div>
-                  <div className="text-xs text-muted-foreground">{u?.email}</div>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {b.numbers.map((n) => (
-                      <Badge key={n} variant="secondary" className="font-mono">
-                        {String(n).padStart(2, "0")}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {buyersOf && <BuyersSearch rifaId={buyersOf} />}
         </DialogContent>
       </Dialog>
+
+      <EditRifaModal rifa={editRifa} onClose={() => setEditRifa(null)} />
 
       <ConfirmDialog
         open={!!confirm}
@@ -207,23 +237,45 @@ function AdminRifas() {
         title={
           confirm?.kind === "close"
             ? `Encerrar "${confirm.title}"?`
-            : `Cancelar "${confirm?.title}"?`
+            : confirm?.kind === "cancel"
+              ? `Cancelar "${confirm.title}"?`
+              : confirm?.kind === "archive"
+                ? `Arquivar "${confirm.title}"?`
+                : `Desarquivar "${confirm?.title}"?`
         }
         description={
           confirm?.kind === "close"
             ? "A rifa deixará de aceitar novas compras. Você poderá realizar o sorteio."
-            : "A rifa será marcada como cancelada. Esta ação não pode ser desfeita."
+            : confirm?.kind === "cancel"
+              ? "A rifa será marcada como cancelada."
+              : confirm?.kind === "archive"
+                ? "A rifa deixará de aparecer nas listas principais, mas não será excluída."
+                : "A rifa voltará a aparecer nas listas principais."
         }
         destructive={confirm?.kind === "cancel"}
-        confirmLabel={confirm?.kind === "close" ? "Encerrar" : "Cancelar rifa"}
+        confirmLabel={
+          confirm?.kind === "close"
+            ? "Encerrar"
+            : confirm?.kind === "cancel"
+              ? "Cancelar rifa"
+              : confirm?.kind === "archive"
+                ? "Arquivar"
+                : "Desarquivar"
+        }
         onConfirm={() => {
           if (!confirm) return;
           if (confirm.kind === "close") {
             closeRifa(confirm.id);
             toast.success("Rifa encerrada");
-          } else {
+          } else if (confirm.kind === "cancel") {
             cancelRifa(confirm.id);
             toast.success("Rifa cancelada");
+          } else if (confirm.kind === "archive") {
+            archiveRifa(confirm.id);
+            toast.success("Rifa arquivada");
+          } else {
+            unarchiveRifa(confirm.id);
+            toast.success("Rifa desarquivada");
           }
           setConfirm(null);
         }}
@@ -231,4 +283,3 @@ function AdminRifas() {
     </div>
   );
 }
-

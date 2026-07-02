@@ -10,10 +10,11 @@ import { CountdownTimer } from "@/components/rifa/CountdownTimer";
 import { ProgressBlock } from "@/components/rifa/ProgressBlock";
 import { RifaStats } from "@/components/rifa/RifaStats";
 import { QuickBuyBar } from "@/components/rifa/QuickBuyBar";
+import { ChooseNumbersModal } from "@/components/rifa/ChooseNumbersModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatBRL } from "@/lib/format";
+import { formatBRL, formatDateTime } from "@/lib/format";
 import { ArrowLeft, Share2, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,13 +25,14 @@ export const Route = createFileRoute("/rifa/$id")({
 function RifaDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const { rifas, getNumbersForRifa, reserveNumbers, confirmPayment } = useRifas();
+  const { rifas, draws, getNumbersForRifa, reserveNumbers, confirmPayment } = useRifas();
   const { user, users } = useAuth();
   const rifa = rifas.find((r) => r.id === id);
   const [selected, setSelected] = useState<number[]>([]);
   const [pixOpen, setPixOpen] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [flashing, setFlashing] = useState<number[]>([]);
+  const [chooseOpen, setChooseOpen] = useState(false);
 
   const numbers = useMemo(
     () => (rifa ? getNumbersForRifa(rifa.id).sort((a, b) => a.number - b.number) : []),
@@ -59,6 +61,8 @@ function RifaDetail() {
   const winnerName = rifa.winnerUserId
     ? users.find((u) => u.id === rifa.winnerUserId)?.name
     : undefined;
+  const draw = draws.find((d) => d.rifaId === rifa.id);
+  const finished = rifa.status !== "ativa";
 
   const toggle = (n: number) => {
     const num = numbers.find((x) => x.number === n);
@@ -128,11 +132,7 @@ function RifaDetail() {
           <div className="space-y-6">
             <Card className="overflow-hidden p-0 shadow-soft">
               <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-                <img
-                  src={rifa.image}
-                  alt={rifa.prize}
-                  className="h-full w-full object-cover"
-                />
+                <img src={rifa.image} alt={rifa.prize} className="h-full w-full object-cover" />
                 <div className="absolute top-4 left-4 flex gap-2">
                   {rifa.status === "ativa" && (
                     <Badge className="bg-success text-success-foreground">Ativa</Badge>
@@ -162,31 +162,49 @@ function RifaDetail() {
               </CardContent>
             </Card>
 
-            {rifa.status === "ativa" && <CountdownTimer target={rifa.drawDate} />}
+            {!finished && <CountdownTimer target={rifa.drawDate} />}
             <ProgressBlock sold={sold} total={rifa.totalNumbers} />
             <RifaStats
               buyers={buyers}
               sold={sold}
               raised={raised}
               drawDate={rifa.drawDate}
-              prizesCount={1}
+              prizesCount={1 + (rifa.prizes?.length ?? 0)}
             />
 
-            {rifa.status === "encerrada" && rifa.winnerNumber && (
+            {finished && (
               <Card className="border-success/40 bg-success/5 shadow-soft">
-                <CardContent className="flex items-center gap-4 p-6">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-success/15 text-success">
-                    <Trophy className="h-7 w-7" />
+                <CardContent className="space-y-3 p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-success/15 text-success">
+                      <Trophy className="h-7 w-7" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm text-muted-foreground">Número vencedor</div>
+                      <div className="font-display text-3xl font-bold text-success">
+                        {rifa.winnerNumber != null
+                          ? String(rifa.winnerNumber).padStart(3, "0")
+                          : "—"}
+                      </div>
+                      <div className="text-sm">
+                        Ganhador: <span className="font-medium">{winnerName ?? "—"}</span>
+                      </div>
+                    </div>
+                    <Badge className="bg-success text-success-foreground">
+                      Sorteio Finalizado
+                    </Badge>
                   </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Número vencedor</div>
-                    <div className="font-display text-2xl font-bold">
-                      {String(rifa.winnerNumber).padStart(3, "0")}
+                  <div className="grid gap-1 border-t pt-3 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Prêmio:</span>{" "}
+                      <span className="font-medium">{rifa.prize}</span>
                     </div>
-                    <div className="text-sm">
-                      Ganhador:{" "}
-                      <span className="font-medium">{winnerName ?? "—"}</span>
-                    </div>
+                    {draw && (
+                      <div>
+                        <span className="text-muted-foreground">Sorteado em:</span>{" "}
+                        <span className="font-medium">{formatDateTime(draw.drawnAt)}</span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -197,22 +215,33 @@ function RifaDetail() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h2 className="font-display text-lg font-bold">
-                      Escolha seus números
+                      {finished ? "Números vendidos" : "Escolha seus números"}
                     </h2>
                     <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                      <Legend color="bg-success/40" label="Disponível" />
-                      <Legend color="bg-warning/50" label="Aguardando" />
-                      <Legend color="bg-destructive/30" label="Vendido" />
+                      {finished ? (
+                        <>
+                          <Legend color="bg-success" label="Vencedor" />
+                          <Legend color="bg-destructive/40" label="Vendido" />
+                          <Legend color="bg-muted" label="Não vendido" />
+                        </>
+                      ) : (
+                        <>
+                          <Legend color="bg-success/40" label="Disponível" />
+                          <Legend color="bg-warning/50" label="Aguardando" />
+                          <Legend color="bg-destructive/30" label="Vendido" />
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {rifa.status === "ativa" && (
+                {!finished && (
                   <QuickBuyBar
                     numbers={numbers}
                     selected={selected}
                     onChange={setSelected}
                     currentUserId={user?.id}
+                    onOpenChoose={() => setChooseOpen(true)}
                   />
                 )}
 
@@ -222,59 +251,56 @@ function RifaDetail() {
                   onToggle={toggle}
                   currentUserId={user?.id}
                   flashing={flashing}
+                  finished={finished}
+                  winnerNumber={rifa.winnerNumber}
                 />
               </CardContent>
             </Card>
           </div>
 
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <Card className="shadow-elevated">
-              <CardContent className="space-y-4 p-6">
-                <div>
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Resumo
-                  </div>
-                  <div className="mt-1 font-display text-3xl font-bold text-primary">
-                    {formatBRL(selected.length * rifa.pricePerNumber)}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {selected.length} número(s) × {formatBRL(rifa.pricePerNumber)}
-                  </div>
-                </div>
-
-                {selected.length > 0 && (
-                  <div className="rounded-lg border bg-muted/30 p-3">
-                    <div className="mb-1 text-xs text-muted-foreground">
-                      Seus números:
+          {!finished && (
+            <aside className="lg:sticky lg:top-24 lg:self-start">
+              <Card className="shadow-elevated">
+                <CardContent className="space-y-4 p-6">
+                  <div>
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                      Resumo
                     </div>
-                    <div className="flex flex-wrap gap-1">
-                      {selected
-                        .sort((a, b) => a - b)
-                        .map((n) => (
-                          <Badge key={n} variant="secondary" className="font-mono">
-                            {String(n).padStart(2, "0")}
-                          </Badge>
-                        ))}
+                    <div className="mt-1 font-display text-3xl font-bold text-primary">
+                      {formatBRL(selected.length * rifa.pricePerNumber)}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {selected.length} número(s) × {formatBRL(rifa.pricePerNumber)}
                     </div>
                   </div>
-                )}
 
-                <Button
-                  size="lg"
-                  className="w-full bg-gradient-primary text-primary-foreground shadow-soft"
-                  disabled={selected.length === 0 || rifa.status !== "ativa"}
-                  onClick={buy}
-                >
-                  Comprar Números
-                </Button>
-                {rifa.status !== "ativa" && (
-                  <p className="text-center text-xs text-muted-foreground">
-                    Esta rifa não está mais aceitando compras.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </aside>
+                  {selected.length > 0 && (
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <div className="mb-1 text-xs text-muted-foreground">Seus números:</div>
+                      <div className="flex flex-wrap gap-1">
+                        {selected
+                          .sort((a, b) => a - b)
+                          .map((n) => (
+                            <Badge key={n} variant="secondary" className="font-mono">
+                              {String(n).padStart(2, "0")}
+                            </Badge>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <Button
+                    size="lg"
+                    className="w-full bg-gradient-primary text-primary-foreground shadow-soft"
+                    disabled={selected.length === 0}
+                    onClick={buy}
+                  >
+                    Comprar Números
+                  </Button>
+                </CardContent>
+              </Card>
+            </aside>
+          )}
         </div>
       </div>
 
@@ -284,6 +310,15 @@ function RifaDetail() {
         onConfirm={onPaid}
         numbers={selected}
         pricePerNumber={rifa.pricePerNumber}
+      />
+
+      <ChooseNumbersModal
+        open={chooseOpen}
+        onOpenChange={setChooseOpen}
+        numbers={numbers}
+        selected={selected}
+        onChange={setSelected}
+        currentUserId={user?.id}
       />
     </div>
   );
