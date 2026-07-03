@@ -11,6 +11,7 @@ import { mockRifas } from "@/mocks/mockRifas";
 import { mockOrders, mockDraws } from "@/mocks/mockOrders";
 import { buildInitialNumbers } from "@/mocks/buildNumbers";
 import type { Draw, Order, Rifa, RifaNumber } from "@/lib/types";
+import { canDraw, eligibleDrawNumbers, isRifaClosed } from "@/lib/rifaStatus";
 
 interface State {
   rifas: Rifa[];
@@ -146,7 +147,11 @@ export function RifasProvider({ children }: { children: ReactNode }) {
 
   const reserveNumbers: RifasContextValue["reserveNumbers"] = useCallback(
     (rifaId, nums, userId) => {
-      const rifa = state.rifas.find((r) => r.id === rifaId)!;
+      const rifa = state.rifas.find((r) => r.id === rifaId);
+      if (!rifa) throw new Error("Rifa não encontrada.");
+      if (isRifaClosed(rifa)) {
+        throw new Error("Esta rifa foi encerrada. Não é mais possível realizar compras.");
+      }
       const order: Order = {
         id: `o-${Date.now()}`,
         rifaId,
@@ -213,11 +218,12 @@ export function RifasProvider({ children }: { children: ReactNode }) {
 
   const drawRifa: RifasContextValue["drawRifa"] = useCallback(
     (rifaId, users) => {
-      const sold = state.numbers.filter(
-        (n) => n.rifaId === rifaId && n.status === "vendido",
-      );
-      if (sold.length === 0) return null;
-      const winner = sold[Math.floor(Math.random() * sold.length)];
+      const rifa = state.rifas.find((r) => r.id === rifaId);
+      if (!rifa) return null;
+      const eligible = eligibleDrawNumbers(state.numbers, rifaId, state.orders);
+      const v = canDraw(rifa, eligible);
+      if (!v.ok) return null;
+      const winner = eligible[Math.floor(Math.random() * eligible.length)];
       const winnerUser = users.find((u) => u.id === winner.userId);
       const draw: Draw = {
         id: `d-${Date.now()}`,
@@ -243,7 +249,7 @@ export function RifasProvider({ children }: { children: ReactNode }) {
       }));
       return draw;
     },
-    [state.numbers],
+    [state.numbers, state.orders, state.rifas],
   );
 
   const value = useMemo<RifasContextValue>(

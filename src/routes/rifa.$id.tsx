@@ -14,8 +14,11 @@ import { ChooseNumbersModal } from "@/components/rifa/ChooseNumbersModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { formatBRL, formatDateTime } from "@/lib/format";
-import { ArrowLeft, Share2, Trophy } from "lucide-react";
+import { ArrowLeft, Share2, Trophy, Lock } from "lucide-react";
+import { isRifaClosed } from "@/lib/rifaStatus";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/rifa/$id")({
@@ -62,15 +65,21 @@ function RifaDetail() {
     ? users.find((u) => u.id === rifa.winnerUserId)?.name
     : undefined;
   const draw = draws.find((d) => d.rifaId === rifa.id);
-  const finished = rifa.status !== "ativa";
+  const closed = isRifaClosed(rifa);
+  const finished = closed;
 
   const toggle = (n: number) => {
+    if (closed) return;
     const num = numbers.find((x) => x.number === n);
     if (!num || num.status === "vendido") return;
     setSelected((s) => (s.includes(n) ? s.filter((x) => x !== n) : [...s, n]));
   };
 
   const buy = () => {
+    if (closed) {
+      toast.error("Esta rifa foi encerrada. Não é mais possível realizar compras.");
+      return;
+    }
     if (!user) {
       toast.info("Faça login para comprar");
       navigate({ to: "/login" });
@@ -81,9 +90,13 @@ function RifaDetail() {
       return;
     }
     if (selected.length === 0) return;
-    const order = reserveNumbers(rifa.id, selected, user.id);
-    setOrderId(order.id);
-    setPixOpen(true);
+    try {
+      const order = reserveNumbers(rifa.id, selected, user.id);
+      setOrderId(order.id);
+      setPixOpen(true);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível reservar os números.");
+    }
   };
 
   const onPaid = () => {
@@ -131,14 +144,24 @@ function RifaDetail() {
         <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
           <div className="space-y-6">
             <Card className="overflow-hidden p-0 shadow-soft">
-              <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-                <img src={rifa.image} alt={rifa.prize} className="h-full w-full object-cover" />
+              <div className="relative bg-muted">
+                <AspectRatio ratio={16 / 10}>
+                  <img
+                    src={rifa.image}
+                    alt={rifa.prize}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-contain"
+                  />
+                </AspectRatio>
                 <div className="absolute top-4 left-4 flex gap-2">
-                  {rifa.status === "ativa" && (
+                  {!closed && (
                     <Badge className="bg-success text-success-foreground">Ativa</Badge>
                   )}
-                  {rifa.status === "encerrada" && (
-                    <Badge variant="secondary">Encerrada</Badge>
+                  {closed && (
+                    <Badge variant="destructive" className="text-sm shadow-soft">
+                      Rifa Encerrada
+                    </Badge>
                   )}
                 </div>
                 <Button
@@ -161,6 +184,16 @@ function RifaDetail() {
                 </div>
               </CardContent>
             </Card>
+
+            {closed && (
+              <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
+                <Lock className="h-4 w-4" />
+                <AlertTitle>Rifa encerrada</AlertTitle>
+                <AlertDescription>
+                  Esta rifa foi encerrada. Não é mais possível realizar compras.
+                </AlertDescription>
+              </Alert>
+            )}
 
             {!finished && <CountdownTimer target={rifa.drawDate} />}
             <ProgressBlock sold={sold} total={rifa.totalNumbers} />
