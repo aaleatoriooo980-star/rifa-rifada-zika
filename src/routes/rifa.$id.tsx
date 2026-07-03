@@ -144,14 +144,24 @@ function RifaDetail() {
         <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
           <div className="space-y-6">
             <Card className="overflow-hidden p-0 shadow-soft">
-              <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-                <img src={rifa.image} alt={rifa.prize} className="h-full w-full object-cover" />
+              <div className="relative bg-muted">
+                <AspectRatio ratio={16 / 10}>
+                  <img
+                    src={rifa.image}
+                    alt={rifa.prize}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-contain"
+                  />
+                </AspectRatio>
                 <div className="absolute top-4 left-4 flex gap-2">
-                  {rifa.status === "ativa" && (
+                  {!closed && (
                     <Badge className="bg-success text-success-foreground">Ativa</Badge>
                   )}
-                  {rifa.status === "encerrada" && (
-                    <Badge variant="secondary">Encerrada</Badge>
+                  {closed && (
+                    <Badge variant="destructive" className="text-sm shadow-soft">
+                      Rifa Encerrada
+                    </Badge>
                   )}
                 </div>
                 <Button
@@ -174,6 +184,16 @@ function RifaDetail() {
                 </div>
               </CardContent>
             </Card>
+
+            {closed && (
+              <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
+                <Lock className="h-4 w-4" />
+                <AlertTitle>Rifa encerrada</AlertTitle>
+                <AlertDescription>
+                  Esta rifa foi encerrada. Não é mais possível realizar compras.
+                </AlertDescription>
+              </Alert>
+            )}
 
             {!finished && <CountdownTimer target={rifa.drawDate} />}
             <ProgressBlock sold={sold} total={rifa.totalNumbers} />
