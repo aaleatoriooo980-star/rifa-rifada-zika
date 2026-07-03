@@ -14,8 +14,11 @@ import { ChooseNumbersModal } from "@/components/rifa/ChooseNumbersModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { formatBRL, formatDateTime } from "@/lib/format";
-import { ArrowLeft, Share2, Trophy } from "lucide-react";
+import { ArrowLeft, Share2, Trophy, Lock } from "lucide-react";
+import { isRifaClosed } from "@/lib/rifaStatus";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/rifa/$id")({
