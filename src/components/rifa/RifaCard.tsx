@@ -4,9 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { formatBRL, formatDateTime } from "@/lib/format";
-import { ArrowRight, Ticket, Clock, CalendarClock, Trophy } from "lucide-react";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { formatBRL } from "@/lib/format";
+import { ArrowRight, Ticket, Clock, Trophy } from "lucide-react";
 import { useCountdown } from "@/lib/useCountdown";
+import { isRifaClosed } from "@/lib/rifaStatus";
 import { cn } from "@/lib/utils";
 
 interface Props {
