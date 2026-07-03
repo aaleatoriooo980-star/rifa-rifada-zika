@@ -140,7 +140,7 @@ async function convertWebmToMp4(input: Blob): Promise<Blob> {
     "output.mp4",
   ]);
   const data = (await ffmpeg.readFile("output.mp4")) as Uint8Array;
-  return new Blob([data.buffer], { type: "video/mp4" });
+  return new Blob([new Uint8Array(data)], { type: "video/mp4" });
 }
 
 export function downloadBlob(blob: Blob, filename: string) {
