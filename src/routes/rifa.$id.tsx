@@ -64,6 +64,7 @@ function RifaDetail() {
   const winnerName = rifa.winnerUserId
     ? users.find((u) => u.id === rifa.winnerUserId)?.name
     : undefined;
+  const draw = draws.find((d) => d.rifaId === rifa.id);
   const closed = isRifaClosed(rifa);
   const finished = closed;
 
