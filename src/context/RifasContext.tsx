@@ -147,7 +147,11 @@ export function RifasProvider({ children }: { children: ReactNode }) {
 
   const reserveNumbers: RifasContextValue["reserveNumbers"] = useCallback(
     (rifaId, nums, userId) => {
-      const rifa = state.rifas.find((r) => r.id === rifaId)!;
+      const rifa = state.rifas.find((r) => r.id === rifaId);
+      if (!rifa) throw new Error("Rifa não encontrada.");
+      if (isRifaClosed(rifa)) {
+        throw new Error("Esta rifa foi encerrada. Não é mais possível realizar compras.");
+      }
       const order: Order = {
         id: `o-${Date.now()}`,
         rifaId,
