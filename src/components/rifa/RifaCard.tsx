@@ -30,22 +30,25 @@ export function RifaCard({ rifa, sold, onOpenResult }: Props) {
         ? "border-warning/50 bg-warning/15 text-warning-foreground"
         : "border-primary/30 bg-primary/5 text-primary";
 
-  const isEncerrada = rifa.status === "encerrada" || rifa.status === "cancelada";
+  const isEncerrada = isRifaClosed(rifa);
 
   return (
     <Card className="group overflow-hidden border-border/60 bg-card p-0 shadow-soft transition-all hover:-translate-y-1 hover:shadow-elevated">
-      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+      <AspectRatio ratio={4 / 3} className="relative overflow-hidden bg-muted">
         <img
           src={rifa.image}
           alt={rifa.prize}
           loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          decoding="async"
+          className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute top-3 left-3">
-          {rifa.status === "ativa" && (
+          {!isEncerrada && rifa.status === "ativa" && (
             <Badge className="bg-success text-success-foreground border-0">Ativa</Badge>
           )}
-          {rifa.status === "encerrada" && <Badge variant="secondary">Encerrada</Badge>}
+          {isEncerrada && rifa.status !== "cancelada" && (
+            <Badge variant="secondary">Encerrada</Badge>
+          )}
           {rifa.status === "cancelada" && (
             <Badge variant="destructive">Cancelada</Badge>
           )}
@@ -53,7 +56,7 @@ export function RifaCard({ rifa, sold, onOpenResult }: Props) {
         <div className="absolute right-3 top-3 rounded-full bg-card/95 px-3 py-1 text-xs font-semibold shadow-soft">
           {formatBRL(rifa.pricePerNumber)} / nº
         </div>
-      </div>
+      </AspectRatio>
       <CardContent className="space-y-4 p-5">
         <div>
           <h3 className="font-display text-lg font-bold leading-tight">{rifa.title}</h3>
@@ -69,7 +72,9 @@ export function RifaCard({ rifa, sold, onOpenResult }: Props) {
           )}
         >
           <Clock className="h-3.5 w-3.5 shrink-0" />
-          {c.expired ? (
+          {!c.ready ? (
+            <span className="tabular-nums">--d --h --m --s</span>
+          ) : c.expired ? (
             <span>Rifa Encerrada</span>
           ) : (
             <span className="tabular-nums">
@@ -78,13 +83,6 @@ export function RifaCard({ rifa, sold, onOpenResult }: Props) {
             </span>
           )}
         </div>
-
-        {rifa.drawDate && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <CalendarClock className="h-3.5 w-3.5" />
-            Sorteio: {formatDateTime(rifa.drawDate)}
-          </div>
-        )}
 
         <div className="space-y-1.5">
           <div className="flex justify-between text-xs text-muted-foreground">
