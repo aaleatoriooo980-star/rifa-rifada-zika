@@ -64,16 +64,21 @@ function RifaDetail() {
   const winnerName = rifa.winnerUserId
     ? users.find((u) => u.id === rifa.winnerUserId)?.name
     : undefined;
-  const draw = draws.find((d) => d.rifaId === rifa.id);
-  const finished = rifa.status !== "ativa";
+  const closed = isRifaClosed(rifa);
+  const finished = closed;
 
   const toggle = (n: number) => {
+    if (closed) return;
     const num = numbers.find((x) => x.number === n);
     if (!num || num.status === "vendido") return;
     setSelected((s) => (s.includes(n) ? s.filter((x) => x !== n) : [...s, n]));
   };
 
   const buy = () => {
+    if (closed) {
+      toast.error("Esta rifa foi encerrada. Não é mais possível realizar compras.");
+      return;
+    }
     if (!user) {
       toast.info("Faça login para comprar");
       navigate({ to: "/login" });
@@ -84,9 +89,13 @@ function RifaDetail() {
       return;
     }
     if (selected.length === 0) return;
-    const order = reserveNumbers(rifa.id, selected, user.id);
-    setOrderId(order.id);
-    setPixOpen(true);
+    try {
+      const order = reserveNumbers(rifa.id, selected, user.id);
+      setOrderId(order.id);
+      setPixOpen(true);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível reservar os números.");
+    }
   };
 
   const onPaid = () => {
