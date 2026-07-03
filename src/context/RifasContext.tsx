@@ -11,6 +11,7 @@ import { mockRifas } from "@/mocks/mockRifas";
 import { mockOrders, mockDraws } from "@/mocks/mockOrders";
 import { buildInitialNumbers } from "@/mocks/buildNumbers";
 import type { Draw, Order, Rifa, RifaNumber } from "@/lib/types";
+import { canDraw, eligibleDrawNumbers, isRifaClosed } from "@/lib/rifaStatus";
 
 interface State {
   rifas: Rifa[];
