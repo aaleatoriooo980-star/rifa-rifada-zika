@@ -27,7 +27,7 @@ export function ProgressBlock({ sold, total }: Props) {
               {pct}%
             </motion.div>
           </div>
-          <div className="text-right text-sm">
+          <div className="text-right text-xs sm:text-sm shrink-0 whitespace-nowrap">
             <div>
               <span className="font-semibold">{sold}</span>{" "}
               <span className="text-muted-foreground">vendidos</span>

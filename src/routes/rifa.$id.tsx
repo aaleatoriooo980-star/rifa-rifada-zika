@@ -182,8 +182,8 @@ function RifaDetail() {
           <ArrowLeft className="h-4 w-4" /> Voltar
         </button>
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-          <div className="space-y-6">
+        <div className="grid gap-8 lg:grid-cols-[1fr_360px] w-full max-w-full">
+          <div className="space-y-6 min-w-0 w-full">
             <Card className="overflow-hidden p-0 shadow-soft">
               <div className="relative bg-muted">
                 <AspectRatio ratio={16 / 10}>

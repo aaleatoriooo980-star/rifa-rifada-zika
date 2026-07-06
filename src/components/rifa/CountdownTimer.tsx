@@ -30,27 +30,27 @@ export function CountdownTimer({ target, compact }: Props) {
 
   return (
     <Card className={cn("border shadow-soft transition-colors", tone)}>
-      <CardContent className={cn("flex items-center gap-4", compact ? "p-3" : "p-4 sm:p-5")}>
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background/70">
-          <Clock className="h-5 w-5" />
+      <CardContent className={cn("flex items-center gap-3 sm:gap-4", compact ? "p-3" : "p-3 sm:p-5")}>
+        <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-background/70">
+          <Clock className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-xs font-medium uppercase tracking-wide opacity-80">
+          <div className="text-[10px] sm:text-xs font-medium uppercase tracking-wide opacity-80">
             {c.expired ? "Rifa encerrada" : "Tempo restante para o sorteio"}
           </div>
           {!c.expired && (
-            <div className="mt-1 grid grid-cols-4 gap-2 sm:gap-3">
+            <div className="mt-1 grid grid-cols-4 gap-1 sm:gap-3">
               {cells.map(([label, val]) => (
                 <div key={label} className="text-center">
                   <motion.div
                     key={val}
                     initial={{ y: -6, opacity: 0.5 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="font-display text-2xl font-bold tabular-nums sm:text-3xl"
+                    className="font-display text-xl font-bold tabular-nums sm:text-3xl"
                   >
                     {String(val).padStart(2, "0")}
                   </motion.div>
-                  <div className="text-[10px] uppercase opacity-70">{label}</div>
+                  <div className="text-[9px] sm:text-[10px] uppercase opacity-70">{label}</div>
                 </div>
               ))}
             </div>
