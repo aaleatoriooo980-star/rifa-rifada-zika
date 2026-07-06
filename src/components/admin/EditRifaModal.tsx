@@ -62,6 +62,7 @@ export function EditRifaModal({ rifa, onClose }: Props) {
       drawTime: toTimeInput(rifa.drawDate),
       status: rifa.status,
     });
+    setPackages(rifa.packages ?? []);
   }, [rifa]);
 
   if (!rifa) return null;
@@ -74,6 +75,11 @@ export function EditRifaModal({ rifa, onClose }: Props) {
     }
     if (!form.drawDate || !form.drawTime) {
       toast.error("Informe data e hora do sorteio.");
+      return;
+    }
+    const pkgErr = validatePackages(packages, Number(form.totalNumbers));
+    if (pkgErr) {
+      toast.error(pkgErr);
       return;
     }
     const iso = new Date(`${form.drawDate}T${form.drawTime}:00`).toISOString();
@@ -90,6 +96,7 @@ export function EditRifaModal({ rifa, onClose }: Props) {
       totalNumbers: Number(form.totalNumbers),
       drawDate: iso,
       status: form.status,
+      packages: [...packages].sort((a, b) => a.quantity - b.quantity),
     });
     toast.success("Rifa atualizada!");
     onClose();
