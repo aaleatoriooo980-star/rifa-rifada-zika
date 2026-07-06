@@ -168,10 +168,10 @@ export function DrawExperienceModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex flex-col bg-[oklch(0.12_0.02_160/0.96)] text-white backdrop-blur-sm"
+        className="fixed inset-0 z-[100] flex flex-col bg-[oklch(0.12_0.02_160/0.96)] text-white backdrop-blur-sm overflow-y-auto"
       >
         {/* Top bar */}
-        <div className="flex items-center justify-between p-4 sm:p-6">
+        <div className="flex items-center justify-between p-4 sm:p-6 shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
               <Ticket className="h-5 w-5" />
@@ -219,7 +219,7 @@ export function DrawExperienceModal({
         </div>
 
         {/* Stage */}
-        <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+        <div className="flex flex-1 flex-col items-center justify-center px-4 py-8 text-center">
           <AnimatePresence mode="wait">
             {stage === "prepare" && (
               <motion.div
@@ -250,7 +250,7 @@ export function DrawExperienceModal({
                 key="spin"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex flex-col items-center gap-6"
+                className="flex flex-col items-center gap-6 w-full"
               >
                 <div className="text-sm uppercase tracking-widest opacity-70 sm:text-base">
                   Escolhendo o número vencedor…
@@ -260,8 +260,8 @@ export function DrawExperienceModal({
                   initial={{ scale: 0.9, opacity: 0.6, filter: "blur(6px)" }}
                   animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
                   transition={{ duration: 0.12 }}
-                  className="flex items-center justify-center rounded-3xl bg-white/10 px-10 py-6 font-display font-black tabular-nums shadow-2xl backdrop-blur"
-                  style={{ fontSize: presentation ? "min(40vw,22rem)" : "min(30vw,16rem)" }}
+                  className="flex items-center justify-center rounded-3xl bg-white/10 px-8 py-6 font-display font-black tabular-nums shadow-2xl backdrop-blur max-w-full"
+                  style={{ fontSize: presentation ? "min(35vw,22rem)" : "min(25vw,16rem)" }}
                 >
                   {String(reelValue).padStart(3, "0")}
                 </motion.div>
@@ -282,52 +282,52 @@ export function DrawExperienceModal({
                   <div className="text-xs uppercase tracking-[0.3em] opacity-80 sm:text-sm">
                     Parabéns!
                   </div>
-                  <div className="mt-1 font-display text-4xl font-black sm:text-5xl">
+                  <div className="mt-1 font-display text-4xl font-black sm:text-5xl px-4 break-words max-w-full">
                     {draw.winnerName ?? "Vencedor"}
                   </div>
                 </div>
-                <div className="rounded-3xl bg-white/10 px-10 py-6 backdrop-blur">
+                <div className="rounded-3xl bg-white/10 px-10 py-6 backdrop-blur max-w-full">
                   <div className="text-xs uppercase tracking-widest opacity-70">
                     Número vencedor
                   </div>
                   <div
                     className="font-display font-black tabular-nums leading-none"
-                    style={{ fontSize: presentation ? "min(35vw,18rem)" : "min(25vw,12rem)" }}
+                    style={{ fontSize: presentation ? "min(30vw,18rem)" : "min(20vw,12rem)" }}
                   >
                     {String(draw.winnerNumber).padStart(3, "0")}
                   </div>
                 </div>
-                <div className="grid gap-1 text-center text-sm opacity-90">
+                <div className="grid gap-1 text-center text-sm opacity-90 px-4">
                   <div>🏆 {rifa.prize}</div>
                   <div>Sorteado em {formatDateTime(draw.drawnAt)}</div>
                 </div>
 
                 {!presentation && (
-                  <div className="mt-2 flex flex-wrap justify-center gap-2">
+                  <div className="mt-2 flex flex-col sm:flex-row sm:flex-wrap justify-center gap-2 w-full max-w-md px-4">
                     <Button
                       onClick={handleWhats}
-                      className="bg-emerald-500 text-white hover:bg-emerald-500/90"
+                      className="w-full sm:w-auto bg-emerald-500 text-white hover:bg-emerald-500/90"
                     >
                       <MessageCircle className="mr-1 h-4 w-4" /> WhatsApp
                     </Button>
                     <Button
                       onClick={handleInsta}
                       variant="outline"
-                      className="border-white/30 bg-white/5 text-white hover:bg-white/10"
+                      className="w-full sm:w-auto border-white/30 bg-white/5 text-white hover:bg-white/10"
                     >
                       <Instagram className="mr-1 h-4 w-4" /> Instagram
                     </Button>
                     <Button
                       onClick={handleGenerate}
                       variant="outline"
-                      className="border-white/30 bg-white/5 text-white hover:bg-white/10"
+                      className="w-full sm:w-auto border-white/30 bg-white/5 text-white hover:bg-white/10"
                     >
                       <Download className="mr-1 h-4 w-4" /> Baixar imagem
                     </Button>
                     <Button
                       onClick={onClose}
                       variant="outline"
-                      className="border-white/30 bg-white/5 text-white hover:bg-white/10"
+                      className="w-full sm:w-auto border-white/30 bg-white/5 text-white hover:bg-white/10"
                     >
                       <Share2 className="mr-1 h-4 w-4" /> Fechar
                     </Button>

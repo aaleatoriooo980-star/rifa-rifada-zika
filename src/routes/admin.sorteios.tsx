@@ -101,7 +101,7 @@ function Sorteios() {
     }
   };
 
-  const handleOpenDraw = (rifaId: string, presentationMode: boolean) => {
+  const handleOpenDraw = async (rifaId: string, presentationMode: boolean) => {
     const rifa = visible.find((r) => r.id === rifaId);
     if (!rifa) return;
     const eligible = eligibleDrawNumbers(numbers, rifaId, orders);
@@ -110,8 +110,32 @@ function Sorteios() {
       toast.error(v.reason ?? "Não é possível realizar o sorteio.");
       return;
     }
+
+    if (!recording) {
+      try {
+        const rec = await startScreenRecording();
+        recorderRef.current = rec;
+        setRecording(true);
+        toast.success(
+          rec.willConvert
+            ? "Gravação iniciada (será convertida para MP4 ao finalizar)."
+            : "Gravação iniciada em MP4.",
+        );
+      } catch (e: any) {
+        toast.error(e?.message ?? "Falha ao iniciar gravação. O sorteio não foi iniciado.");
+        return;
+      }
+    }
+
     setPresentation(presentationMode);
     setOpenRifa(rifaId);
+  };
+
+  const handleCloseDraw = () => {
+    setOpenRifa(null);
+    if (recorderRef.current) {
+      stopRecording();
+    }
   };
 
   return (
@@ -131,11 +155,11 @@ function Sorteios() {
           </p>
         </div>
         {!recording ? (
-          <Button onClick={startRecording} variant="outline">
+          <Button onClick={startRecording} variant="outline" className="w-full sm:w-auto">
             <Video className="mr-1 h-4 w-4" /> Iniciar Gravação
           </Button>
         ) : (
-          <Button onClick={stopRecording} variant="destructive" disabled={converting}>
+          <Button onClick={stopRecording} variant="destructive" disabled={converting} className="w-full sm:w-auto">
             <StopCircle className="mr-1 h-4 w-4" />
             {converting ? "Convertendo…" : "Parar Gravação"}
           </Button>
@@ -196,11 +220,11 @@ function Sorteios() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         onClick={() => handleOpenDraw(r.id, false)}
                         disabled={!validation.ok}
-                        className="flex-1 bg-gradient-primary text-primary-foreground"
+                        className="w-full sm:flex-1 bg-gradient-primary text-primary-foreground"
                       >
                         <Sparkles className="mr-1 h-4 w-4" />
                         Realizar Sorteio
@@ -209,6 +233,7 @@ function Sorteios() {
                         variant="outline"
                         onClick={() => handleOpenDraw(r.id, true)}
                         disabled={!validation.ok}
+                        className="w-full sm:w-auto"
                       >
                         <Presentation className="mr-1 h-4 w-4" /> Apresentação
                       </Button>
@@ -227,7 +252,7 @@ function Sorteios() {
       {activeRifa && (
         <DrawExperienceModal
           open={!!openRifa}
-          onClose={() => setOpenRifa(null)}
+          onClose={handleCloseDraw}
           rifa={activeRifa}
           soldNumbers={soldForOpen}
           runDraw={() =>
