@@ -145,6 +145,7 @@ function RifaDetail() {
     const bought = [...selected];
     setPixOpen(false);
     setSelected([]);
+    setActivePackageId(null);
     setOrderId(null);
     setFlashing(bought);
     setTimeout(() => setFlashing([]), 1600);
