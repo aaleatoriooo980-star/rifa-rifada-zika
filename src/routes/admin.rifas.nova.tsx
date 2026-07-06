@@ -195,6 +195,12 @@ function NovaRifa() {
                 />
               </div>
             </div>
+            <PackagesEditor
+              packages={packages}
+              onChange={setPackages}
+              totalNumbers={Number(form.totalNumbers)}
+              pricePerNumber={Number(form.pricePerNumber)}
+            />
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 type="button"
