@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import type { RifaNumber } from "@/lib/types";
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
   flashing?: number[];
   winnerNumber?: number;
   finished?: boolean;
+  maxSelectable?: number;
 }
 
 export function NumbersGrid({
@@ -19,7 +21,21 @@ export function NumbersGrid({
   flashing,
   winnerNumber,
   finished,
+  maxSelectable,
 }: Props) {
+  const handleClick = (n: RifaNumber) => {
+    const isSel = selected.includes(n.number);
+    if (
+      !isSel &&
+      maxSelectable != null &&
+      selected.length >= maxSelectable
+    ) {
+      toast.error("Quantidade máxima do pacote atingida.");
+      return;
+    }
+    onToggle(n.number);
+  };
+
   return (
     <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12">
       {numbers.map((n) => {
@@ -34,7 +50,7 @@ export function NumbersGrid({
             key={n.number}
             type="button"
             disabled={disabled}
-            onClick={() => onToggle(n.number)}
+            onClick={() => handleClick(n)}
             className={cn(
               "aspect-square rounded-md text-xs font-semibold transition-all duration-200",
               "disabled:cursor-not-allowed",
@@ -62,3 +78,4 @@ export function NumbersGrid({
     </div>
   );
 }
+
