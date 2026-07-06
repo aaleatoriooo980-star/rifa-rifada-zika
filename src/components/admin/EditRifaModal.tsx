@@ -238,7 +238,13 @@ export function EditRifaModal({ rifa, onClose }: Props) {
                 className="mt-1.5"
                 required
               />
-            </div>
+          </div>
+          <PackagesEditor
+            packages={packages}
+            onChange={setPackages}
+            totalNumbers={Number(form.totalNumbers)}
+            pricePerNumber={Number(form.pricePerNumber)}
+          />
             <div>
               <Label htmlFor="e-time">Hora *</Label>
               <Input
