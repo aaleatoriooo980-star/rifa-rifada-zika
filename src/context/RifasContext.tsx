@@ -12,6 +12,7 @@ import { mockOrders, mockDraws } from "@/mocks/mockOrders";
 import { buildInitialNumbers } from "@/mocks/buildNumbers";
 import type { Draw, Order, Rifa, RifaNumber } from "@/lib/types";
 import { canDraw, eligibleDrawNumbers, isRifaClosed } from "@/lib/rifaStatus";
+import { computePrice } from "@/lib/pricing";
 
 interface State {
   rifas: Rifa[];
@@ -31,6 +32,7 @@ interface RifasContextValue extends State {
     rifaId: string,
     nums: number[],
     userId: string,
+    packageId?: string | null,
   ) => Order;
   confirmPayment: (orderId: string) => void;
   getNumbersForRifa: (rifaId: string) => RifaNumber[];
