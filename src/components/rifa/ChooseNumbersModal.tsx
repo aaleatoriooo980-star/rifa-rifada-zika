@@ -13,6 +13,7 @@ interface Props {
   selected: number[];
   onChange: (next: number[]) => void;
   currentUserId?: string;
+  maxSelectable?: number;
 }
 
 export function ChooseNumbersModal({
