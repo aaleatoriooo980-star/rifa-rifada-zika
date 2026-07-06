@@ -52,42 +52,51 @@ export function PackagesPicker({
               type="button"
               onClick={() => onPick(pkg)}
               className={cn(
-                "group relative min-w-[200px] snap-start rounded-xl border bg-card p-4 text-left transition-all duration-200",
+                "group relative min-w-[250px] snap-start rounded-xl border bg-card p-3 text-left transition-all duration-200",
                 "hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-elevated",
                 isActive &&
                   "border-primary ring-2 ring-primary shadow-elevated scale-[1.02]",
               )}
             >
               {pkg.description && (
-                <Badge className="mb-2 bg-gradient-primary text-primary-foreground">
-                  <Flame className="mr-1 h-3 w-3" /> {pkg.description}
+                <Badge className="absolute -top-2 left-3 bg-gradient-primary text-primary-foreground text-[9px] px-1.5 py-0">
+                  <Flame className="mr-0.5 h-2.5 w-2.5" /> {pkg.description}
                 </Badge>
               )}
-              <div className="font-display text-2xl font-bold">
-                {pkg.quantity} {pkg.quantity === 1 ? "número" : "números"}
-              </div>
-              {savings > 0 && (
-                <div className="mt-1 text-xs text-muted-foreground line-through">
-                  De {formatBRL(normal)}
+              <div className="flex justify-between items-start w-full gap-2 mt-1">
+                <div>
+                  <div className="font-display text-base font-bold">
+                    {pkg.quantity} {pkg.quantity === 1 ? "número" : "números"}
+                  </div>
+                  <div className="mt-0.5 font-display text-lg font-bold text-primary">
+                    {formatBRL(pkg.price)}
+                  </div>
+                  <div className="mt-1.5">
+                    {savings > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-success/15 text-success text-[10px] py-0 px-1.5 font-medium border-0"
+                      >
+                        Economize {formatBRL(savings)} ({pct}%)
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-              )}
-              <div className="mt-0.5 font-display text-xl font-bold text-primary">
-                {formatBRL(pkg.price)}
+
+                <div className="flex flex-col items-end text-right justify-between h-full pt-0.5">
+                  {savings > 0 && (
+                    <div className="text-xs text-muted-foreground line-through">
+                      De {formatBRL(normal)}
+                    </div>
+                  )}
+                  <div className="text-[11px] text-muted-foreground mt-2">
+                    {formatBRL(unit)} / número
+                  </div>
+                </div>
               </div>
-              <div className="mt-1 text-[11px] text-muted-foreground">
-                {formatBRL(unit)} / número
-              </div>
-              {savings > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="mt-2 bg-success/15 text-success"
-                >
-                  Economize {formatBRL(savings)} ({pct}%)
-                </Badge>
-              )}
               {isActive && (
-                <div className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-soft">
-                  <Check className="h-3.5 w-3.5" />
+                <div className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-soft">
+                  <Check className="h-3 w-3" />
                 </div>
               )}
             </button>
