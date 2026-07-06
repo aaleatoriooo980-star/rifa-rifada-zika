@@ -13,6 +13,13 @@ export interface User {
 
 export type RifaStatus = "ativa" | "encerrada" | "cancelada";
 
+export interface RifaPackage {
+  id: string;
+  quantity: number;
+  price: number;
+  description?: string;
+}
+
 export interface Rifa {
   id: string;
   title: string;
@@ -28,6 +35,7 @@ export interface Rifa {
   drawDate?: string;
   winnerNumber?: number;
   winnerUserId?: string;
+  packages?: RifaPackage[];
 }
 
 export type NumberStatus = "disponivel" | "aguardando" | "vendido";
