@@ -287,6 +287,19 @@ function RifaDetail() {
 
             <Card className="shadow-soft">
               <CardContent className="space-y-4 p-6">
+                {!finished && rifa.packages && rifa.packages.length > 0 && (
+                  <PackagesPicker
+                    packages={rifa.packages}
+                    activeId={activePackageId}
+                    onPick={pickPackage}
+                    onClear={() => {
+                      setActivePackageId(null);
+                      toast("Pacote removido.");
+                    }}
+                    pricePerNumber={rifa.pricePerNumber}
+                  />
+                )}
+
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h2 className="font-display text-lg font-bold">
@@ -308,6 +321,15 @@ function RifaDetail() {
                       )}
                     </div>
                   </div>
+                  {!finished && (
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">Escolhidos: </span>
+                      <span className="font-display text-lg font-bold text-primary">
+                        {selected.length}
+                        {maxSelectable != null && ` / ${maxSelectable}`}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {!finished && (
@@ -317,6 +339,7 @@ function RifaDetail() {
                     onChange={setSelected}
                     currentUserId={user?.id}
                     onOpenChoose={() => setChooseOpen(true)}
+                    maxSelectable={maxSelectable}
                   />
                 )}
 
@@ -328,6 +351,7 @@ function RifaDetail() {
                   flashing={flashing}
                   finished={finished}
                   winnerNumber={rifa.winnerNumber}
+                  maxSelectable={maxSelectable}
                 />
               </CardContent>
             </Card>
@@ -342,11 +366,36 @@ function RifaDetail() {
                       Resumo
                     </div>
                     <div className="mt-1 font-display text-3xl font-bold text-primary">
-                      {formatBRL(selected.length * rifa.pricePerNumber)}
+                      {formatBRL(price.total)}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {selected.length} número(s) × {formatBRL(rifa.pricePerNumber)}
-                    </div>
+                    {price.appliedPackage ? (
+                      <div className="mt-1 space-y-1 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-gradient-primary text-primary-foreground">
+                            <Sparkles className="mr-1 h-3 w-3" />
+                            Pacote {price.appliedPackage.quantity} números
+                          </Badge>
+                        </div>
+                        <div className="text-muted-foreground line-through">
+                          {selected.length} × {formatBRL(rifa.pricePerNumber)} ={" "}
+                          {formatBRL(price.unitTotal)}
+                        </div>
+                        {price.savings > 0 && (
+                          <div className="text-success">
+                            Economia de {formatBRL(price.savings)} ({price.discountPct}%)
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">
+                        {selected.length} número(s) × {formatBRL(rifa.pricePerNumber)}
+                      </div>
+                    )}
+                    {activePackage && selected.length < activePackage.quantity && (
+                      <div className="mt-2 rounded-md bg-primary/10 px-3 py-2 text-xs text-primary">
+                        Agora escolha {activePackage.quantity - selected.length} número(s) para completar seu pacote.
+                      </div>
+                    )}
                   </div>
 
                   {selected.length > 0 && (
@@ -385,6 +434,14 @@ function RifaDetail() {
         onConfirm={onPaid}
         numbers={selected}
         pricePerNumber={rifa.pricePerNumber}
+        total={price.total}
+        appliedPackageLabel={
+          price.appliedPackage
+            ? `${price.appliedPackage.quantity} números${price.appliedPackage.description ? ` · ${price.appliedPackage.description}` : ""}`
+            : undefined
+        }
+        savings={price.savings}
+        discountPct={price.discountPct}
       />
 
       <ChooseNumbersModal
@@ -394,6 +451,20 @@ function RifaDetail() {
         selected={selected}
         onChange={setSelected}
         currentUserId={user?.id}
+        maxSelectable={maxSelectable}
+      />
+
+      <ConfirmDialog
+        open={!!pendingPackage}
+        onOpenChange={(o) => !o && setPendingPackage(null)}
+        title="Reduzir seleção?"
+        description={
+          pendingPackage
+            ? `Você possui ${selected.length} números selecionados, mas o pacote escolhido é de ${pendingPackage.quantity}. Deseja limpar os números excedentes?`
+            : ""
+        }
+        confirmLabel="Limpar excedentes"
+        onConfirm={applyPendingPackage}
       />
     </div>
   );
