@@ -23,6 +23,7 @@ export function ChooseNumbersModal({
   selected,
   onChange,
   currentUserId,
+  maxSelectable,
 }: Props) {
   const [text, setText] = useState("");
 
