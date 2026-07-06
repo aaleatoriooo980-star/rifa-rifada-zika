@@ -160,7 +160,7 @@ function MinhasRifas() {
                       src={rifa.image}
                       alt={rifa.prize}
                       loading="lazy"
-                      className="h-20 w-28 rounded-lg object-cover"
+                      className="w-full sm:w-28 h-40 sm:h-20 rounded-lg object-cover"
                     />
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
@@ -187,13 +187,13 @@ function MinhasRifas() {
                         <CountBadge target={rifa.drawDate} />
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                       {rifa.status !== "ativa" && (
-                        <Button variant="outline" onClick={() => setResult(rifa)}>
+                        <Button variant="outline" onClick={() => setResult(rifa)} className="flex-1 sm:flex-initial justify-center">
                           <Trophy className="mr-1 h-4 w-4" /> Resultado
                         </Button>
                       )}
-                      <Button onClick={() => setDetail(rifa)}>
+                      <Button onClick={() => setDetail(rifa)} className={cn("justify-center", rifa.status !== "ativa" ? "flex-1 sm:flex-initial" : "w-full sm:w-auto")}>
                         <Eye className="mr-1 h-4 w-4" /> Ver
                       </Button>
                     </div>

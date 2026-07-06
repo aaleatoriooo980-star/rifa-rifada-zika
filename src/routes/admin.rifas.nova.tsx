@@ -119,18 +119,19 @@ function NovaRifa() {
             </div>
             <div>
               <Label htmlFor="image">Imagem (URL ou upload)</Label>
-              <div className="mt-1.5 flex gap-2">
+              <div className="mt-1.5 flex flex-col sm:flex-row gap-2">
                 <Input
                   id="image"
                   value={form.image.startsWith("data:") ? "" : form.image}
                   onChange={(e) => setForm({ ...form, image: e.target.value })}
                   placeholder="https://..."
+                  className="w-full"
                 />
                 <Input
                   type="file"
                   accept="image/*"
                   onChange={onImage}
-                  className="max-w-[200px]"
+                  className="w-full sm:max-w-[200px]"
                 />
               </div>
               {form.image && (
@@ -201,15 +202,16 @@ function NovaRifa() {
               totalNumbers={Number(form.totalNumbers)}
               pricePerNumber={Number(form.pricePerNumber)}
             />
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => navigate({ to: "/admin/rifas" })}
+                className="w-full sm:w-auto"
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-gradient-primary text-primary-foreground">
+              <Button type="submit" className="bg-gradient-primary text-primary-foreground w-full sm:w-auto">
                 Criar Rifa
               </Button>
             </div>

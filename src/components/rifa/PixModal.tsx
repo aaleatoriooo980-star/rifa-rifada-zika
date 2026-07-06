@@ -60,7 +60,7 @@ export function PixModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[95vw] max-h-[90vh] overflow-y-auto sm:max-w-md rounded-xl">
         <DialogHeader>
           <DialogTitle>Finalizar pagamento</DialogTitle>
           <DialogDescription>
@@ -120,9 +120,9 @@ export function PixModal({
           </div>
 
 
-          <div className="flex flex-col items-center gap-3 rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 p-6">
+          <div className="flex flex-col items-center gap-3 rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 p-4 sm:p-6">
             <div className="rounded-2xl bg-white p-3 shadow-soft">
-              <div className="grid h-40 w-40 grid-cols-12 grid-rows-12 gap-px">
+              <div className="grid h-32 w-32 sm:h-40 sm:w-40 grid-cols-12 grid-rows-12 gap-px">
                 {Array.from({ length: 144 }).map((_, i) => {
                   const filled =
                     (i * 7919 + 13) % 3 === 0 ||
@@ -163,14 +163,14 @@ export function PixModal({
           </Badge>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-2">
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Cancelar
           </Button>
           <Button
             onClick={confirm}
             disabled={paying}
-            className="bg-gradient-primary text-primary-foreground"
+            className="w-full sm:w-auto bg-gradient-primary text-primary-foreground"
           >
             {paying ? "Confirmando..." : "Simular pagamento aprovado"}
           </Button>

@@ -112,7 +112,7 @@ export function EditRifaModal({ rifa, onClose }: Props) {
 
   return (
     <Dialog open={!!rifa} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[95vh] w-[95vw] sm:max-w-2xl overflow-y-auto rounded-xl">
         <DialogHeader>
           <DialogTitle>Editar Rifa</DialogTitle>
           <DialogDescription>
@@ -181,14 +181,15 @@ export function EditRifaModal({ rifa, onClose }: Props) {
           </div>
           <div>
             <Label htmlFor="e-image">Imagem</Label>
-            <div className="mt-1.5 flex gap-2">
+            <div className="mt-1.5 flex flex-col sm:flex-row gap-2">
               <Input
                 id="e-image"
                 value={form.image.startsWith("data:") ? "" : form.image}
                 onChange={(e) => setForm({ ...form, image: e.target.value })}
                 placeholder="https://..."
+                className="w-full"
               />
-              <Input type="file" accept="image/*" onChange={onImage} className="max-w-[200px]" />
+              <Input type="file" accept="image/*" onChange={onImage} className="w-full sm:max-w-[200px]" />
             </div>
             {form.image && (
               <img
@@ -257,11 +258,11 @@ export function EditRifaModal({ rifa, onClose }: Props) {
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2">
+            <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button type="submit" className="bg-gradient-primary text-primary-foreground">
+            <Button type="submit" className="bg-gradient-primary text-primary-foreground w-full sm:w-auto">
               Salvar
             </Button>
           </DialogFooter>

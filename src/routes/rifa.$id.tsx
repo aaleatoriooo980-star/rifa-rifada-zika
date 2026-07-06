@@ -8,7 +8,6 @@ import { NumbersGrid } from "@/components/rifa/NumbersGrid";
 import { PixModal } from "@/components/rifa/PixModal";
 import { CountdownTimer } from "@/components/rifa/CountdownTimer";
 import { ProgressBlock } from "@/components/rifa/ProgressBlock";
-import { RifaStats } from "@/components/rifa/RifaStats";
 import { QuickBuyBar } from "@/components/rifa/QuickBuyBar";
 import { ChooseNumbersModal } from "@/components/rifa/ChooseNumbersModal";
 import { PackagesPicker } from "@/components/rifa/PackagesPicker";
@@ -216,7 +215,7 @@ function RifaDetail() {
                 </Button>
               </div>
               <CardContent className="space-y-3 p-6">
-                <h1 className="font-display text-3xl font-bold">{rifa.title}</h1>
+                <h1 className="font-display text-2xl sm:text-3xl font-bold leading-tight">{rifa.title}</h1>
                 <p className="text-muted-foreground">{rifa.description}</p>
                 <div className="pt-1 text-sm">
                   <span className="text-muted-foreground">Valor por número: </span>
@@ -239,13 +238,7 @@ function RifaDetail() {
 
             {!finished && <CountdownTimer target={rifa.drawDate} />}
             <ProgressBlock sold={sold} total={rifa.totalNumbers} />
-            <RifaStats
-              buyers={buyers}
-              sold={sold}
-              raised={raised}
-              drawDate={rifa.drawDate}
-              prizesCount={1 + (rifa.prizes?.length ?? 0)}
-            />
+
 
             {finished && (
               <Card className="border-success/40 bg-success/5 shadow-soft">

@@ -181,14 +181,14 @@ function AdminRifas() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold">Gerenciar Rifas</h1>
           <p className="text-sm text-muted-foreground">
             {rifas.length} rifa(s) cadastrada(s).
           </p>
         </div>
-        <Button asChild className="bg-gradient-primary text-primary-foreground">
+        <Button asChild className="bg-gradient-primary text-primary-foreground w-full sm:w-auto">
           <Link to="/admin/rifas/nova">
             <Plus className="mr-1 h-4 w-4" /> Nova rifa
           </Link>
@@ -196,7 +196,7 @@ function AdminRifas() {
       </div>
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-        <TabsList>
+        <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="ativas">Ativas</TabsTrigger>
           <TabsTrigger value="encerradas">Encerradas</TabsTrigger>
           <TabsTrigger value="arquivadas">Arquivadas</TabsTrigger>
@@ -218,7 +218,7 @@ function AdminRifas() {
       </Card>
 
       <Dialog open={!!buyersOf} onOpenChange={(o) => !o && setBuyersOf(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="w-[95vw] sm:max-w-lg rounded-xl">
           <DialogHeader>
             <DialogTitle>Compradores</DialogTitle>
             <DialogDescription>

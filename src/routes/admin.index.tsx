@@ -191,7 +191,7 @@ function Dashboard() {
                         {formatDateTime(o.createdAt)}
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <div className="font-semibold">{formatBRL(o.total)}</div>
                       <Badge
                         variant={o.status === "pago" ? "default" : "secondary"}

@@ -44,7 +44,7 @@ function RegisterPage() {
           <span className="font-display text-lg font-bold">RifasOnline</span>
         </Link>
 
-        <div className="rounded-2xl bg-card p-8 shadow-elevated">
+        <div className="rounded-2xl bg-card p-6 sm:p-8 shadow-elevated">
           <h1 className="font-display text-2xl font-bold">Criar conta</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Em menos de 1 minuto você está participando.
