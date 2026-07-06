@@ -11,14 +11,18 @@ import { ProgressBlock } from "@/components/rifa/ProgressBlock";
 import { RifaStats } from "@/components/rifa/RifaStats";
 import { QuickBuyBar } from "@/components/rifa/QuickBuyBar";
 import { ChooseNumbersModal } from "@/components/rifa/ChooseNumbersModal";
+import { PackagesPicker } from "@/components/rifa/PackagesPicker";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { formatBRL, formatDateTime } from "@/lib/format";
-import { ArrowLeft, Share2, Trophy, Lock } from "lucide-react";
+import { ArrowLeft, Share2, Trophy, Lock, Sparkles } from "lucide-react";
 import { isRifaClosed } from "@/lib/rifaStatus";
+import { computePrice } from "@/lib/pricing";
+import type { RifaPackage } from "@/lib/types";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/rifa/$id")({
@@ -36,6 +40,8 @@ function RifaDetail() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [flashing, setFlashing] = useState<number[]>([]);
   const [chooseOpen, setChooseOpen] = useState(false);
+  const [activePackageId, setActivePackageId] = useState<string | null>(null);
+  const [pendingPackage, setPendingPackage] = useState<RifaPackage | null>(null);
 
   const numbers = useMemo(
     () => (rifa ? getNumbersForRifa(rifa.id).sort((a, b) => a.number - b.number) : []),
