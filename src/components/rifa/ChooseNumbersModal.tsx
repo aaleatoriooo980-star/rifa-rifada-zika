@@ -65,11 +65,25 @@ export function ChooseNumbersModal({
       valid.add(n);
     }
 
-    const added = valid.size - selected.length;
+    let finalSet = valid;
+    let overflowed = 0;
+    if (maxSelectable != null && valid.size > maxSelectable) {
+      overflowed = valid.size - maxSelectable;
+      const kept = Array.from(valid)
+        .sort((a, b) => a - b)
+        .slice(0, maxSelectable);
+      finalSet = new Set(kept);
+    }
+
+    const added = finalSet.size - selected.length;
     if (added > 0) {
-      onChange(Array.from(valid).sort((a, b) => a - b));
+      onChange(Array.from(finalSet).sort((a, b) => a - b));
       toast.success(`${added} número(s) adicionado(s) à seleção.`);
     }
+    if (overflowed > 0)
+      toast.error(
+        `Quantidade máxima do pacote atingida. ${overflowed} número(s) ignorado(s).`,
+      );
     if (notNumbers.length)
       toast.error(`Valor inválido: ${notNumbers.join(", ")}`);
     if (notExist.length)
