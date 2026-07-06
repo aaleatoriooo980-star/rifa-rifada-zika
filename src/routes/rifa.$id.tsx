@@ -74,6 +74,41 @@ function RifaDetail() {
   const closed = isRifaClosed(rifa);
   const finished = closed;
 
+  const activePackage = useMemo<RifaPackage | null>(() => {
+    if (!rifa || !activePackageId) return null;
+    return rifa.packages?.find((p) => p.id === activePackageId) ?? null;
+  }, [rifa, activePackageId]);
+
+  const price = useMemo(
+    () =>
+      computePrice(
+        selected.length,
+        rifa.pricePerNumber,
+        rifa.packages,
+        activePackageId,
+      ),
+    [selected.length, rifa.pricePerNumber, rifa.packages, activePackageId],
+  );
+
+  const maxSelectable = activePackage ? activePackage.quantity : undefined;
+
+  const pickPackage = (pkg: RifaPackage) => {
+    if (selected.length > pkg.quantity) {
+      setPendingPackage(pkg);
+      return;
+    }
+    setActivePackageId(pkg.id);
+    toast.success("Pacote promocional selecionado.");
+  };
+
+  const applyPendingPackage = () => {
+    if (!pendingPackage) return;
+    setSelected((s) => [...s].sort((a, b) => a - b).slice(0, pendingPackage.quantity));
+    setActivePackageId(pendingPackage.id);
+    setPendingPackage(null);
+    toast.success("Pacote promocional selecionado.");
+  };
+
   const toggle = (n: number) => {
     if (closed) return;
     const num = numbers.find((x) => x.number === n);
@@ -97,7 +132,7 @@ function RifaDetail() {
     }
     if (selected.length === 0) return;
     try {
-      const order = reserveNumbers(rifa.id, selected, user.id);
+      const order = reserveNumbers(rifa.id, selected, user.id, activePackageId);
       setOrderId(order.id);
       setPixOpen(true);
     } catch (e: any) {
