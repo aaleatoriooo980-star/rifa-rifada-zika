@@ -28,6 +28,7 @@ function NovaRifa() {
     drawDate: "",
     drawTime: "",
   });
+  const [packages, setPackages] = useState<RifaPackage[]>([]);
 
   const onImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -52,6 +53,12 @@ function NovaRifa() {
       toast.error("A data do sorteio deve ser no futuro.");
       return;
     }
+    const pkgErr = validatePackages(packages, Number(form.totalNumbers));
+    if (pkgErr) {
+      toast.error(pkgErr);
+      return;
+    }
+    const sortedPackages = [...packages].sort((a, b) => a.quantity - b.quantity);
     const rifa = createRifa({
       title: form.title,
       description: form.description,
@@ -60,6 +67,7 @@ function NovaRifa() {
       totalNumbers: Number(form.totalNumbers),
       image: form.image || "https://placehold.co/800x600/10b981/ffffff?text=Rifa",
       drawDate: iso.toISOString(),
+      packages: sortedPackages,
     });
     toast.success("Rifa criada com sucesso!");
     navigate({ to: "/admin/rifas" });
