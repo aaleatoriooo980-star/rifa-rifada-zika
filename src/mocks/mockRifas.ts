@@ -18,6 +18,11 @@ export const mockRifas: Rifa[] = [
     status: "ativa",
     createdAt: "2026-06-01T10:00:00.000Z",
     drawDate: "2026-08-30T20:00:00.000Z",
+    packages: [
+      { id: "pkg-iphone-5", quantity: 5, price: 22 },
+      { id: "pkg-iphone-10", quantity: 10, price: 40, description: "Mais Vendido" },
+      { id: "pkg-iphone-20", quantity: 20, price: 75 },
+    ],
   },
   {
     id: "r-moto",

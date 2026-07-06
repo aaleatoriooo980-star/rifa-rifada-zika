@@ -1,87 +1,95 @@
-## Correções e melhorias — Rifas Online
+## Pacotes Promocionais por Rifa
 
-### 1. Encerramento centralizado (fonte única da verdade)
+Adiciona pacotes de preço opcionais em cada rifa. Não altera lógica de compra existente — apenas modula o valor final e adiciona um limite opcional de quantidade quando um pacote está ativo.
 
-Criar `src/lib/rifaStatus.ts` com helpers puros:
+### 1. Modelo de dados
 
-- `isRifaClosed(rifa)` → true se `status !== "ativa"` **ou** `drawDate` <= `Date.now()`.
-- `canPurchase(rifa)` → `!isRifaClosed(rifa)`.
-- `eligibleDrawNumbers(numbers, rifaId, orders)` → apenas números com `status === "vendido"` **e** cuja `order.status === "pago"` **e** `rifaId` corresponde.
-- `canDraw(rifa, eligible)` → retorna `{ ok, reason }` validando: rifa encerrada, tem `drawDate`, existe ≥1 número elegível.
+`src/lib/types.ts`
+- Novo tipo `RifaPackage { id: string; quantity: number; price: number; description?: string }`.
+- Adicionar `packages?: RifaPackage[]` em `Rifa`.
 
-Usar esses helpers em toda parte (público, admin, contexto) para evitar divergências.
+Nenhuma migração — persistência é localStorage via `RifasContext`.
 
-### 2. Bloqueio de compras após encerramento (`src/routes/rifa.$id.tsx`)
+### 2. Área administrativa
 
-- Substituir `const finished = rifa.status !== "ativa"` por `const closed = isRifaClosed(rifa)`.
-- Quando `closed`:
-  - Ocultar `QuickBuyBar`, `ChooseNumbersModal`, botão "Comprar Números" e a `aside` de resumo.
-  - Esconder `CountdownTimer`.
-  - Mostrar um `Alert` destacado (bg-warning/10, ícone Lock): **"Esta rifa foi encerrada. Não é mais possível realizar compras."**
-  - Manter `NumbersGrid` em modo leitura (`finished` prop já suportada).
-- Endurecer `toggle()` e `buy()` para retornar cedo se `closed` (defesa em profundidade).
-- Ajustar `RifasContext.reserveNumbers` para checar `isRifaClosed` e lançar/retornar erro; toast de erro no chamador.
+**Novo componente** `src/components/admin/PackagesEditor.tsx`
+- Seção "Pacotes Promocionais" com botão "+ Adicionar Pacote".
+- Cada linha: inputs Quantidade, Valor, Descrição, botão remover.
+- Validações inline: quantidade > 0, valor > 0, sem quantidades duplicadas, quantidade ≤ `totalNumbers` da rifa.
+- Ordena automaticamente por quantidade ao salvar.
+- Exibe preço unitário calculado e economia vs. `pricePerNumber × quantity`.
 
-### 3. Selo "Rifa Encerrada" e resultados
+**Integração**
+- `src/routes/admin.rifas.nova.tsx`: nova seção usando `PackagesEditor`; envia `packages` para `createRifa`.
+- `src/components/admin/EditRifaModal.tsx`: mesma seção para editar pacotes de rifa existente.
+- `src/context/RifasContext.tsx`: `createRifa` e `updateRifa` já aceitam campos genéricos; apenas garantir que `packages` seja preservado.
 
-Na página pública quando `closed`:
-- Selo grande no topo do card principal: `Badge` "Rifa Encerrada" (destructive).
-- Bloco de resultado já existente é mantido, garantindo exibir: data/hora do sorteio, número vencedor, nome do vencedor, prêmio. Se ainda não sorteada, mostrar "Aguardando sorteio".
+### 3. Página da rifa (cliente)
 
-### 4. Sorteio — regras e validação (`admin.sorteios.tsx` + `RifasContext.drawRifa`)
+`src/routes/rifa.$id.tsx` + novo componente `src/components/rifa/PackagesPicker.tsx`
+- Acima do `NumbersGrid`, seção "Escolha sua oferta" com cards dos pacotes.
+- Cada card mostra: quantidade, descrição (badge "🔥"), preço promocional, "De: R$X", "Economize: R$Y (Z%)".
+- Desktop: grid horizontal. Mobile: scroll horizontal (`overflow-x-auto snap-x`).
+- Clicar num card:
+  - Define `activePackage` no estado local do `RifaDetail`.
+  - NÃO seleciona números.
+  - Exibe toast "Pacote promocional selecionado."
+  - Se `selected.length > pkg.quantity`: `ConfirmDialog` "Você possui mais números selecionados do que o pacote escolhido. Deseja limpar os excedentes?" — ao confirmar, trunca `selected` para `pkg.quantity` primeiros.
+- Botão "Remover pacote" volta ao cálculo unitário.
 
-- `drawRifa` passa a receber apenas números elegíveis via `eligibleDrawNumbers(state.numbers, rifaId, state.orders)`.
-- Antes de sortear, executar `canDraw`:
-  - se falhar → `toast.error(reason)` e abortar (não abrir `DrawExperienceModal`).
-  - motivos possíveis: "Rifa ainda não foi encerrada", "Rifa sem data de sorteio", "Não existem números vendidos para realizar o sorteio."
-- Botão "Realizar Sorteio" fica desabilitado quando `eligible.length === 0` com tooltip explicativo.
-- Ao encerrar automaticamente por data: no `admin.sorteios.tsx` (e onde necessário) usar `isRifaClosed` para decidir se o botão de sortear aparece.
+### 4. Contador e limite
 
-### 5. Gravação do sorteio em MP4 (`src/lib/screenRecorder.ts`)
+`src/components/rifa/QuickBuyBar.tsx` + `NumbersGrid.tsx`
+- Novo prop `maxSelectable?: number` (vem de `activePackage.quantity`).
+- Ao tentar adicionar número quando `selected.length >= maxSelectable`: bloquear e toast "Quantidade máxima do pacote atingida."
+- Aplica também aos botões +1/+5/+10/+20 (truncar ao limite) e ao `ChooseNumbersModal` (rejeita excedentes com mensagem).
+- Remover número sempre permitido; libera nova seleção.
+- Exibir header "Escolhidos: X / N" quando pacote ativo, e "Escolhidos: X" caso contrário.
 
-Corrigir e ampliar:
+### 5. Cálculo do valor
 
-- Detectar suporte a MP4 via `MediaRecorder.isTypeSupported("video/mp4;codecs=h264,aac")` e usá-lo quando disponível (Safari, Chrome recentes).
-- Fallback: gravar em `video/webm` e converter para MP4 no cliente com **ffmpeg.wasm** (`@ffmpeg/ffmpeg` + `@ffmpeg/util`), carregado sob demanda (dynamic `import()`), extensão final `.mp4`.
-- Se o navegador não suportar `getDisplayMedia` ou `MediaRecorder`: `toast.error` amigável.
-- Tratar cancelamento pelo usuário (`NotAllowedError`) sem stacktrace.
-- No `admin.sorteios.tsx`:
-  - Botão alterna "Gravar Sorteio" ↔ "Parar Gravação".
-  - Indicador fixo `REC` (badge vermelho pulsante `animate-pulse` + ponto) no topo direito da tela durante a gravação.
-  - Toasts: início, parada com download, erro, conversão em andamento ("Convertendo para MP4…").
+Novo helper `src/lib/pricing.ts`:
+```
+computePrice(selectedCount, unitPrice, packages, activePackageId?) 
+  → { total, unitTotal, appliedPackage?, savings, discountPct }
+```
+Regras:
+- Se `activePackage` existe e `selectedCount === activePackage.quantity` → usa preço do pacote.
+- Se não há pacote ativo mas `selectedCount` bate exatamente com algum `packages[i].quantity` → aplica automaticamente (menor preço se houver empate) e mostra toast "Pacote promocional aplicado."
+- Caso contrário → `selectedCount × unitPrice`.
 
-### 6. Imagem responsiva do card de rifa (`RifaCard.tsx` e `rifa.$id.tsx`)
+Usado em:
+- Painel lateral de resumo do `rifa.$id.tsx` (mostra "Pacote aplicado", valor unitário riscado quando aplica).
+- `PixModal.tsx` (checkout): exibe quantidade, pacote aplicado, valor unitário base, desconto, valor final.
+- `reserveNumbers` em `RifasContext`: cálculo do `order.total` passa a usar `computePrice` em vez de `nums.length * pricePerNumber`.
 
-- Definir fallback `defaultRifaImage` (novo asset `src/assets/rifa-placeholder.jpg` ou gerado) usado quando `rifa.image` está vazio.
-- No card: usar `AspectRatio` (`ratio={4/3}`) com `<img className="h-full w-full object-contain bg-muted">` para não cortar; borda arredondada herdada do `Card`.
-- Na página de detalhe: `AspectRatio ratio={16/10}` com `object-contain` e bg neutro para preservar proporção original em mobile/desktop.
-- Adicionar `loading="lazy"` e `decoding="async"` onde faltar.
+### 6. UX / animações
 
-### 7. Remover card duplicado
+- Card ativo do pacote: `ring-2 ring-primary`, transform `scale-[1.02]`, transição suave.
+- Badge "Mais Vendido" (ou descrição) com gradiente.
+- Toasts via `sonner` já disponíveis.
 
-Auditar e remover duplicações identificadas:
-- `RifaCard`: linha "Sorteio: {drawDate}" duplica o `CountdownTimer` da página de detalhe; manter apenas o cronômetro no card + tooltip com a data, evitando repetir na home.
-- Página `/rifa/:id`: `RifaStats` mostra `drawDate` e o `CountdownTimer` também — consolidar `drawDate` apenas dentro do `CountdownTimer` header.
-- Confirmar durante a implementação se o usuário se refere a outro card específico; ajustar em seguida se necessário.
+### 7. Compatibilidade
 
-### 8. Correção de hidratação SSR do cronômetro
+- Rifas sem `packages` continuam funcionando exatamente como hoje (seção fica oculta).
+- Nenhuma mudança em `drawRifa`, `confirmPayment`, `isRifaClosed`, autenticação ou grid de números além do `maxSelectable` opcional.
+- Mocks existentes (`mockRifas.ts`): opcional adicionar `packages` em 1–2 rifas para demonstração.
 
-`useCountdown` inicia com `Date.now()` no SSR e re-renderiza no cliente → mismatch (visto em runtime error). Ajuste: retornar `null`/zeros até `useEffect` marcar `mounted = true`; renderizar `--` no primeiro paint em SSR.
+### Arquivos
 
-### 9. Qualidade / consistência
+Novos:
+- `src/lib/pricing.ts`
+- `src/components/admin/PackagesEditor.tsx`
+- `src/components/rifa/PackagesPicker.tsx`
 
-- Substituir os checks pontuais de `rifa.status !== "ativa"` por `isRifaClosed(rifa)` em: `RifaCard`, `rifa.$id.tsx`, `minhas-rifas.tsx`, `admin.rifas.index.tsx`, `admin.sorteios.tsx`.
-- `RifasContext.confirmPayment` inalterado, mas garantir que só marca `vendido` se a order estava `pendente` (já é).
-- Nenhuma mudança em rotas, tipos existentes ou fluxos de auth.
-
-### Detalhes técnicos
-
-- Novo arquivo: `src/lib/rifaStatus.ts` (helpers puros, sem side effects).
-- Atualizados: `src/lib/screenRecorder.ts`, `src/routes/rifa.$id.tsx`, `src/routes/admin.sorteios.tsx`, `src/context/RifasContext.tsx`, `src/components/rifa/RifaCard.tsx`, `src/components/rifa/NumbersGrid.tsx` (guardas), `src/lib/useCountdown.ts` (SSR-safe).
-- Dependências novas (lazy loaded): `@ffmpeg/ffmpeg`, `@ffmpeg/util` (~poucos MB, carregados só ao gravar em fallback webm→mp4).
-- Sem mudanças de schema ou backend (localStorage mantido).
-
-### Fora de escopo
-
-- Backend real, autenticação server-side, pagamentos reais.
-- Redesenho visual amplo.
+Editados:
+- `src/lib/types.ts`
+- `src/context/RifasContext.tsx` (usar `computePrice` em `reserveNumbers`)
+- `src/routes/admin.rifas.nova.tsx`
+- `src/components/admin/EditRifaModal.tsx`
+- `src/routes/rifa.$id.tsx`
+- `src/components/rifa/QuickBuyBar.tsx`
+- `src/components/rifa/NumbersGrid.tsx`
+- `src/components/rifa/ChooseNumbersModal.tsx`
+- `src/components/rifa/PixModal.tsx`
+- `src/mocks/mockRifas.ts` (dados de exemplo — opcional)

@@ -11,14 +11,18 @@ import { ProgressBlock } from "@/components/rifa/ProgressBlock";
 import { RifaStats } from "@/components/rifa/RifaStats";
 import { QuickBuyBar } from "@/components/rifa/QuickBuyBar";
 import { ChooseNumbersModal } from "@/components/rifa/ChooseNumbersModal";
+import { PackagesPicker } from "@/components/rifa/PackagesPicker";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { formatBRL, formatDateTime } from "@/lib/format";
-import { ArrowLeft, Share2, Trophy, Lock } from "lucide-react";
+import { ArrowLeft, Share2, Trophy, Lock, Sparkles } from "lucide-react";
 import { isRifaClosed } from "@/lib/rifaStatus";
+import { computePrice } from "@/lib/pricing";
+import type { RifaPackage } from "@/lib/types";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/rifa/$id")({
@@ -36,6 +40,8 @@ function RifaDetail() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [flashing, setFlashing] = useState<number[]>([]);
   const [chooseOpen, setChooseOpen] = useState(false);
+  const [activePackageId, setActivePackageId] = useState<string | null>(null);
+  const [pendingPackage, setPendingPackage] = useState<RifaPackage | null>(null);
 
   const numbers = useMemo(
     () => (rifa ? getNumbersForRifa(rifa.id).sort((a, b) => a.number - b.number) : []),
@@ -68,6 +74,41 @@ function RifaDetail() {
   const closed = isRifaClosed(rifa);
   const finished = closed;
 
+  const activePackage = useMemo<RifaPackage | null>(() => {
+    if (!rifa || !activePackageId) return null;
+    return rifa.packages?.find((p) => p.id === activePackageId) ?? null;
+  }, [rifa, activePackageId]);
+
+  const price = useMemo(
+    () =>
+      computePrice(
+        selected.length,
+        rifa.pricePerNumber,
+        rifa.packages,
+        activePackageId,
+      ),
+    [selected.length, rifa.pricePerNumber, rifa.packages, activePackageId],
+  );
+
+  const maxSelectable = activePackage ? activePackage.quantity : undefined;
+
+  const pickPackage = (pkg: RifaPackage) => {
+    if (selected.length > pkg.quantity) {
+      setPendingPackage(pkg);
+      return;
+    }
+    setActivePackageId(pkg.id);
+    toast.success("Pacote promocional selecionado.");
+  };
+
+  const applyPendingPackage = () => {
+    if (!pendingPackage) return;
+    setSelected((s) => [...s].sort((a, b) => a - b).slice(0, pendingPackage.quantity));
+    setActivePackageId(pendingPackage.id);
+    setPendingPackage(null);
+    toast.success("Pacote promocional selecionado.");
+  };
+
   const toggle = (n: number) => {
     if (closed) return;
     const num = numbers.find((x) => x.number === n);
@@ -91,7 +132,7 @@ function RifaDetail() {
     }
     if (selected.length === 0) return;
     try {
-      const order = reserveNumbers(rifa.id, selected, user.id);
+      const order = reserveNumbers(rifa.id, selected, user.id, activePackageId);
       setOrderId(order.id);
       setPixOpen(true);
     } catch (e: any) {
@@ -104,6 +145,7 @@ function RifaDetail() {
     const bought = [...selected];
     setPixOpen(false);
     setSelected([]);
+    setActivePackageId(null);
     setOrderId(null);
     setFlashing(bought);
     setTimeout(() => setFlashing([]), 1600);
@@ -245,6 +287,19 @@ function RifaDetail() {
 
             <Card className="shadow-soft">
               <CardContent className="space-y-4 p-6">
+                {!finished && rifa.packages && rifa.packages.length > 0 && (
+                  <PackagesPicker
+                    packages={rifa.packages}
+                    activeId={activePackageId}
+                    onPick={pickPackage}
+                    onClear={() => {
+                      setActivePackageId(null);
+                      toast("Pacote removido.");
+                    }}
+                    pricePerNumber={rifa.pricePerNumber}
+                  />
+                )}
+
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h2 className="font-display text-lg font-bold">
@@ -266,6 +321,15 @@ function RifaDetail() {
                       )}
                     </div>
                   </div>
+                  {!finished && (
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">Escolhidos: </span>
+                      <span className="font-display text-lg font-bold text-primary">
+                        {selected.length}
+                        {maxSelectable != null && ` / ${maxSelectable}`}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {!finished && (
@@ -275,6 +339,7 @@ function RifaDetail() {
                     onChange={setSelected}
                     currentUserId={user?.id}
                     onOpenChoose={() => setChooseOpen(true)}
+                    maxSelectable={maxSelectable}
                   />
                 )}
 
@@ -286,6 +351,7 @@ function RifaDetail() {
                   flashing={flashing}
                   finished={finished}
                   winnerNumber={rifa.winnerNumber}
+                  maxSelectable={maxSelectable}
                 />
               </CardContent>
             </Card>
@@ -300,11 +366,36 @@ function RifaDetail() {
                       Resumo
                     </div>
                     <div className="mt-1 font-display text-3xl font-bold text-primary">
-                      {formatBRL(selected.length * rifa.pricePerNumber)}
+                      {formatBRL(price.total)}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {selected.length} número(s) × {formatBRL(rifa.pricePerNumber)}
-                    </div>
+                    {price.appliedPackage ? (
+                      <div className="mt-1 space-y-1 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-gradient-primary text-primary-foreground">
+                            <Sparkles className="mr-1 h-3 w-3" />
+                            Pacote {price.appliedPackage.quantity} números
+                          </Badge>
+                        </div>
+                        <div className="text-muted-foreground line-through">
+                          {selected.length} × {formatBRL(rifa.pricePerNumber)} ={" "}
+                          {formatBRL(price.unitTotal)}
+                        </div>
+                        {price.savings > 0 && (
+                          <div className="text-success">
+                            Economia de {formatBRL(price.savings)} ({price.discountPct}%)
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">
+                        {selected.length} número(s) × {formatBRL(rifa.pricePerNumber)}
+                      </div>
+                    )}
+                    {activePackage && selected.length < activePackage.quantity && (
+                      <div className="mt-2 rounded-md bg-primary/10 px-3 py-2 text-xs text-primary">
+                        Agora escolha {activePackage.quantity - selected.length} número(s) para completar seu pacote.
+                      </div>
+                    )}
                   </div>
 
                   {selected.length > 0 && (
@@ -343,6 +434,14 @@ function RifaDetail() {
         onConfirm={onPaid}
         numbers={selected}
         pricePerNumber={rifa.pricePerNumber}
+        total={price.total}
+        appliedPackageLabel={
+          price.appliedPackage
+            ? `${price.appliedPackage.quantity} números${price.appliedPackage.description ? ` · ${price.appliedPackage.description}` : ""}`
+            : undefined
+        }
+        savings={price.savings}
+        discountPct={price.discountPct}
       />
 
       <ChooseNumbersModal
@@ -352,6 +451,20 @@ function RifaDetail() {
         selected={selected}
         onChange={setSelected}
         currentUserId={user?.id}
+        maxSelectable={maxSelectable}
+      />
+
+      <ConfirmDialog
+        open={!!pendingPackage}
+        onOpenChange={(o) => !o && setPendingPackage(null)}
+        title="Reduzir seleção?"
+        description={
+          pendingPackage
+            ? `Você possui ${selected.length} números selecionados, mas o pacote escolhido é de ${pendingPackage.quantity}. Deseja limpar os números excedentes?`
+            : ""
+        }
+        confirmLabel="Limpar excedentes"
+        onConfirm={applyPendingPackage}
       />
     </div>
   );

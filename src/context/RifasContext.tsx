@@ -12,6 +12,7 @@ import { mockOrders, mockDraws } from "@/mocks/mockOrders";
 import { buildInitialNumbers } from "@/mocks/buildNumbers";
 import type { Draw, Order, Rifa, RifaNumber } from "@/lib/types";
 import { canDraw, eligibleDrawNumbers, isRifaClosed } from "@/lib/rifaStatus";
+import { computePrice } from "@/lib/pricing";
 
 interface State {
   rifas: Rifa[];
@@ -31,6 +32,7 @@ interface RifasContextValue extends State {
     rifaId: string,
     nums: number[],
     userId: string,
+    packageId?: string | null,
   ) => Order;
   confirmPayment: (orderId: string) => void;
   getNumbersForRifa: (rifaId: string) => RifaNumber[];
@@ -146,18 +148,24 @@ export function RifasProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const reserveNumbers: RifasContextValue["reserveNumbers"] = useCallback(
-    (rifaId, nums, userId) => {
+    (rifaId, nums, userId, packageId) => {
       const rifa = state.rifas.find((r) => r.id === rifaId);
       if (!rifa) throw new Error("Rifa não encontrada.");
       if (isRifaClosed(rifa)) {
         throw new Error("Esta rifa foi encerrada. Não é mais possível realizar compras.");
       }
+      const { total } = computePrice(
+        nums.length,
+        rifa.pricePerNumber,
+        rifa.packages,
+        packageId ?? null,
+      );
       const order: Order = {
         id: `o-${Date.now()}`,
         rifaId,
         userId,
         numbers: nums,
-        total: nums.length * rifa.pricePerNumber,
+        total,
         status: "pendente",
         createdAt: new Date().toISOString(),
       };

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Edit3, X, Plus } from "lucide-react";
+import { toast } from "sonner";
 import type { RifaNumber } from "@/lib/types";
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
   currentUserId?: string;
   disabled?: boolean;
   onOpenChoose?: () => void;
+  maxSelectable?: number;
 }
 
 export function QuickBuyBar({
@@ -18,6 +20,7 @@ export function QuickBuyBar({
   currentUserId,
   disabled,
   onOpenChoose,
+  maxSelectable,
 }: Props) {
   const availablePool = numbers.filter(
     (n) =>
@@ -30,8 +33,17 @@ export function QuickBuyBar({
       .map((n) => n.number)
       .filter((n) => !selected.includes(n));
     if (pool.length === 0) return;
+    let take = Math.min(qty, pool.length);
+    if (maxSelectable != null) {
+      const room = maxSelectable - selected.length;
+      if (room <= 0) {
+        toast.error("Quantidade máxima do pacote atingida.");
+        return;
+      }
+      take = Math.min(take, room);
+    }
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    onChange([...selected, ...shuffled.slice(0, Math.min(qty, pool.length))]);
+    onChange([...selected, ...shuffled.slice(0, take)]);
   };
 
   return (
@@ -41,7 +53,10 @@ export function QuickBuyBar({
           key={q}
           size="sm"
           variant="outline"
-          disabled={disabled}
+          disabled={
+            disabled ||
+            (maxSelectable != null && selected.length >= maxSelectable)
+          }
           onClick={() => addRandom(q)}
           className="hover-scale"
         >
@@ -71,3 +86,4 @@ export function QuickBuyBar({
     </div>
   );
 }
+

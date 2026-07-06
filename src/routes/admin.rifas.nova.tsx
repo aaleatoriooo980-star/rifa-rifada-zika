@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PackagesEditor, validatePackages } from "@/components/admin/PackagesEditor";
+import type { RifaPackage } from "@/lib/types";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/rifas/nova")({
@@ -26,6 +28,7 @@ function NovaRifa() {
     drawDate: "",
     drawTime: "",
   });
+  const [packages, setPackages] = useState<RifaPackage[]>([]);
 
   const onImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,6 +53,12 @@ function NovaRifa() {
       toast.error("A data do sorteio deve ser no futuro.");
       return;
     }
+    const pkgErr = validatePackages(packages, Number(form.totalNumbers));
+    if (pkgErr) {
+      toast.error(pkgErr);
+      return;
+    }
+    const sortedPackages = [...packages].sort((a, b) => a.quantity - b.quantity);
     const rifa = createRifa({
       title: form.title,
       description: form.description,
@@ -58,6 +67,7 @@ function NovaRifa() {
       totalNumbers: Number(form.totalNumbers),
       image: form.image || "https://placehold.co/800x600/10b981/ffffff?text=Rifa",
       drawDate: iso.toISOString(),
+      packages: sortedPackages,
     });
     toast.success("Rifa criada com sucesso!");
     navigate({ to: "/admin/rifas" });
@@ -185,6 +195,12 @@ function NovaRifa() {
                 />
               </div>
             </div>
+            <PackagesEditor
+              packages={packages}
+              onChange={setPackages}
+              totalNumbers={Number(form.totalNumbers)}
+              pricePerNumber={Number(form.pricePerNumber)}
+            />
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 type="button"

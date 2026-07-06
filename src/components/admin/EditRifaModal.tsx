@@ -12,7 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRifas } from "@/context/RifasContext";
-import type { Rifa, RifaStatus } from "@/lib/types";
+import type { Rifa, RifaPackage, RifaStatus } from "@/lib/types";
+import { PackagesEditor, validatePackages } from "@/components/admin/PackagesEditor";
 import { toast } from "sonner";
 
 interface Props {
@@ -45,6 +46,7 @@ export function EditRifaModal({ rifa, onClose }: Props) {
     drawTime: "",
     status: "ativa" as RifaStatus,
   });
+  const [packages, setPackages] = useState<RifaPackage[]>([]);
 
   useEffect(() => {
     if (!rifa) return;
@@ -60,6 +62,7 @@ export function EditRifaModal({ rifa, onClose }: Props) {
       drawTime: toTimeInput(rifa.drawDate),
       status: rifa.status,
     });
+    setPackages(rifa.packages ?? []);
   }, [rifa]);
 
   if (!rifa) return null;
@@ -72,6 +75,11 @@ export function EditRifaModal({ rifa, onClose }: Props) {
     }
     if (!form.drawDate || !form.drawTime) {
       toast.error("Informe data e hora do sorteio.");
+      return;
+    }
+    const pkgErr = validatePackages(packages, Number(form.totalNumbers));
+    if (pkgErr) {
+      toast.error(pkgErr);
       return;
     }
     const iso = new Date(`${form.drawDate}T${form.drawTime}:00`).toISOString();
@@ -88,6 +96,7 @@ export function EditRifaModal({ rifa, onClose }: Props) {
       totalNumbers: Number(form.totalNumbers),
       drawDate: iso,
       status: form.status,
+      packages: [...packages].sort((a, b) => a.quantity - b.quantity),
     });
     toast.success("Rifa atualizada!");
     onClose();
@@ -229,7 +238,13 @@ export function EditRifaModal({ rifa, onClose }: Props) {
                 className="mt-1.5"
                 required
               />
-            </div>
+          </div>
+          <PackagesEditor
+            packages={packages}
+            onChange={setPackages}
+            totalNumbers={Number(form.totalNumbers)}
+            pricePerNumber={Number(form.pricePerNumber)}
+          />
             <div>
               <Label htmlFor="e-time">Hora *</Label>
               <Input
