@@ -84,13 +84,41 @@ export function PixModal({
                 <Badge variant="outline">+{numbers.length - 12}</Badge>
               )}
             </div>
-            <div className="mt-3 flex items-center justify-between border-t pt-3">
-              <span className="text-sm text-muted-foreground">Total</span>
-              <span className="font-display text-xl font-bold text-primary">
-                {formatBRL(total)}
-              </span>
+            <div className="mt-3 space-y-1.5 border-t pt-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Valor unitário</span>
+                <span>
+                  {numbers.length} × {formatBRL(pricePerNumber)} ={" "}
+                  <span className={savings > 0 ? "line-through text-muted-foreground" : "font-medium"}>
+                    {formatBRL(unitTotal)}
+                  </span>
+                </span>
+              </div>
+              {appliedPackageLabel && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Pacote aplicado</span>
+                  <Badge className="bg-gradient-primary text-primary-foreground">
+                    {appliedPackageLabel}
+                  </Badge>
+                </div>
+              )}
+              {savings > 0 && (
+                <div className="flex items-center justify-between text-success">
+                  <span>Desconto</span>
+                  <span className="font-medium">
+                    − {formatBRL(savings)} ({discountPct}%)
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center justify-between border-t pt-2">
+                <span className="text-muted-foreground">Total</span>
+                <span className="font-display text-xl font-bold text-primary">
+                  {formatBRL(total)}
+                </span>
+              </div>
             </div>
           </div>
+
 
           <div className="flex flex-col items-center gap-3 rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 p-6">
             <div className="rounded-2xl bg-white p-3 shadow-soft">
