@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PackagesEditor, validatePackages } from "@/components/admin/PackagesEditor";
+import type { RifaPackage } from "@/lib/types";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/rifas/nova")({
