@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { formatDateTime } from "@/lib/format";
 import { useCountdown } from "@/lib/useCountdown";
-import { Trophy, Sparkles, Presentation, Video, StopCircle, Circle } from "lucide-react";
+import { Trophy, Sparkles, Presentation, Video, StopCircle, Circle, Lock } from "lucide-react";
 import { DrawExperienceModal } from "@/components/draw/DrawExperienceModal";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import {
   startScreenRecording,
   downloadBlob,
@@ -44,9 +45,10 @@ function CountdownLine({ target }: { target?: string }) {
 }
 
 function Sorteios() {
-  const { rifas, numbers, orders, draws, drawRifa } = useRifas();
+  const { rifas, numbers, orders, draws, drawRifa, closeRifa } = useRifas();
   const { users } = useAuth();
   const [openRifa, setOpenRifa] = useState<string | null>(null);
+  const [confirmCloseId, setConfirmCloseId] = useState<string | null>(null);
   const [presentation, setPresentation] = useState(false);
   const [recording, setRecording] = useState(false);
   const [converting, setConverting] = useState(false);
@@ -238,6 +240,15 @@ function Sorteios() {
                         <Presentation className="mr-1 h-4 w-4" /> Apresentação
                       </Button>
                     </div>
+                    {r.status === "ativa" && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => setConfirmCloseId(r.id)}
+                        className="w-full mt-2"
+                      >
+                        <Lock className="mr-1 h-3.5 w-3.5" /> Encerrar Rifa
+                      </Button>
+                    )}
                     {!validation.ok && (
                       <p className="text-xs text-muted-foreground">{validation.reason}</p>
                     )}
@@ -266,6 +277,22 @@ function Sorteios() {
           onTogglePresentation={() => setPresentation((p) => !p)}
         />
       )}
+
+      <ConfirmDialog
+        open={!!confirmCloseId}
+        onOpenChange={(o) => !o && setConfirmCloseId(null)}
+        title="Encerrar Rifa?"
+        description="Tem certeza que deseja encerrar esta rifa? Após o encerramento não será mais possível realizar compras."
+        confirmLabel="Confirmar Encerramento"
+        cancelLabel="Cancelar"
+        onConfirm={() => {
+          if (confirmCloseId) {
+            closeRifa(confirmCloseId);
+            toast.success("Rifa encerrada com sucesso!");
+            setConfirmCloseId(null);
+          }
+        }}
+      />
     </div>
   );
 }
