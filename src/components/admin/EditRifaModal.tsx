@@ -12,7 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRifas } from "@/context/RifasContext";
-import type { Rifa, RifaStatus } from "@/lib/types";
+import type { Rifa, RifaPackage, RifaStatus } from "@/lib/types";
+import { PackagesEditor, validatePackages } from "@/components/admin/PackagesEditor";
 import { toast } from "sonner";
 
 interface Props {
@@ -45,6 +46,7 @@ export function EditRifaModal({ rifa, onClose }: Props) {
     drawTime: "",
     status: "ativa" as RifaStatus,
   });
+  const [packages, setPackages] = useState<RifaPackage[]>([]);
 
   useEffect(() => {
     if (!rifa) return;
