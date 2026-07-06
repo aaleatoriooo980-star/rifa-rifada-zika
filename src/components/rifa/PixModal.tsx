@@ -19,14 +19,29 @@ interface Props {
   onConfirm: () => void;
   numbers: number[];
   pricePerNumber: number;
+  total?: number;
+  appliedPackageLabel?: string;
+  savings?: number;
+  discountPct?: number;
 }
 
 const PIX_CODE = "000201010212MOCKPIX123456789BR.GOV.BCB.PIX5204000053039865802BR";
 
-export function PixModal({ open, onClose, onConfirm, numbers, pricePerNumber }: Props) {
+export function PixModal({
+  open,
+  onClose,
+  onConfirm,
+  numbers,
+  pricePerNumber,
+  total: totalProp,
+  appliedPackageLabel,
+  savings = 0,
+  discountPct = 0,
+}: Props) {
   const [copied, setCopied] = useState(false);
   const [paying, setPaying] = useState(false);
-  const total = numbers.length * pricePerNumber;
+  const unitTotal = numbers.length * pricePerNumber;
+  const total = totalProp ?? unitTotal;
 
   const copy = async () => {
     await navigator.clipboard.writeText(PIX_CODE);
