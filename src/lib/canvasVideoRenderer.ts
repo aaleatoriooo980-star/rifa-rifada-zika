@@ -750,5 +750,15 @@ export function isVideoSupported(): boolean {
   if (typeof MediaRecorder === "undefined") return false;
   const c = document.createElement("canvas");
   if (typeof (c as any).captureStream !== "function") return false;
-  return pickRecordingMime() !== null;
+  
+  const picked = pickRecordingMime();
+  if (!picked) return false;
+
+  // On mobile/tablet, only enable video if it can be recorded directly to MP4 natively.
+  // WebM-to-MP4 via FFmpeg.wasm is too heavy and crashes mobile browsers due to memory constraints (OOM).
+  if (isMobileDevice()) {
+    return picked.isNativeMp4;
+  }
+
+  return true;
 }
