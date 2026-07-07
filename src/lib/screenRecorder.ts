@@ -33,7 +33,18 @@ function pickMimeType(): { mimeType: string; isMp4: boolean } {
   return { mimeType: "", isMp4: false };
 }
 
+function isMobileDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+}
+
 export async function startScreenRecording(): Promise<Recorder> {
+  // Mobile browsers (Android/iOS) don't support getDisplayMedia at all
+  if (isMobileDevice()) {
+    throw new Error(
+      "Gravação de tela não é suportada em dispositivos móveis. O sorteio será realizado sem gravação."
+    );
+  }
   if (typeof navigator === "undefined" || !navigator.mediaDevices?.getDisplayMedia) {
     throw new Error("Seu navegador não suporta gravação de tela.");
   }

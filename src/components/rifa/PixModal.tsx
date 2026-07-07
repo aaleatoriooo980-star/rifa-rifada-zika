@@ -120,9 +120,9 @@ export function PixModal({
           </div>
 
 
-          <div className="flex flex-col items-center gap-3 rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 p-4 sm:p-6">
-            <div className="rounded-2xl bg-white p-3 shadow-soft">
-              <div className="grid h-32 w-32 sm:h-40 sm:w-40 grid-cols-12 grid-rows-12 gap-px">
+          <div className="flex flex-col items-center gap-2 rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 p-3 sm:p-5">
+            <div className="rounded-2xl bg-white p-2 sm:p-3 shadow-soft">
+              <div className="grid h-28 w-28 sm:h-36 sm:w-36 grid-cols-12 grid-rows-12 gap-px">
                 {Array.from({ length: 144 }).map((_, i) => {
                   const filled =
                     (i * 7919 + 13) % 3 === 0 ||
@@ -139,8 +139,8 @@ export function PixModal({
                 })}
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <QrCode className="h-4 w-4" /> QR Code PIX (demonstrativo)
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <QrCode className="h-3.5 w-3.5" /> QR Code PIX (demonstrativo)
             </div>
           </div>
 

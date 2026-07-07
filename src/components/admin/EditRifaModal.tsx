@@ -199,7 +199,7 @@ export function EditRifaModal({ rifa, onClose }: Props) {
               />
             )}
           </div>
-          <div className="grid gap-4 sm:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="e-price">Valor *</Label>
               <Input
@@ -230,7 +230,7 @@ export function EditRifaModal({ rifa, onClose }: Props) {
               />
             </div>
             <div>
-              <Label htmlFor="e-date">Data *</Label>
+              <Label htmlFor="e-date">Data do Sorteio *</Label>
               <Input
                 id="e-date"
                 type="date"
@@ -239,15 +239,9 @@ export function EditRifaModal({ rifa, onClose }: Props) {
                 className="mt-1.5"
                 required
               />
-          </div>
-          <PackagesEditor
-            packages={packages}
-            onChange={setPackages}
-            totalNumbers={Number(form.totalNumbers)}
-            pricePerNumber={Number(form.pricePerNumber)}
-          />
+            </div>
             <div>
-              <Label htmlFor="e-time">Hora *</Label>
+              <Label htmlFor="e-time">Hora do Sorteio *</Label>
               <Input
                 id="e-time"
                 type="time"
@@ -258,6 +252,12 @@ export function EditRifaModal({ rifa, onClose }: Props) {
               />
             </div>
           </div>
+          <PackagesEditor
+            packages={packages}
+            onChange={setPackages}
+            totalNumbers={Number(form.totalNumbers)}
+            pricePerNumber={Number(form.pricePerNumber)}
+          />
           <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2">
             <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
               Cancelar

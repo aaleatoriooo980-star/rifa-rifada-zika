@@ -124,8 +124,18 @@ function Sorteios() {
             : "Gravação iniciada em MP4.",
         );
       } catch (e: any) {
-        toast.error(e?.message ?? "Falha ao iniciar gravação. O sorteio não foi iniciado.");
-        return;
+        // On mobile or unsupported browsers, proceed without recording
+        const isMobileError =
+          e?.message?.includes("dispositivos móveis") ||
+          e?.message?.includes("getDisplayMedia") ||
+          e?.message?.includes("não suporta");
+        if (isMobileError) {
+          toast.warning("Gravação indisponível neste dispositivo. O sorteio continuará normalmente.");
+          // Don't return — proceed with the draw anyway
+        } else {
+          toast.error(e?.message ?? "Falha ao iniciar gravação. O sorteio não foi iniciado.");
+          return;
+        }
       }
     }
 
