@@ -381,16 +381,18 @@ function RifaDetail() {
                     maxSelectable={maxSelectable}
                   />
 
-                  <NumbersGrid
-                    numbers={numbers}
-                    selected={selected}
-                    onToggle={toggle}
-                    currentUserId={user?.id}
-                    flashing={flashing}
-                    finished={finished}
-                    winnerNumber={rifa.winnerNumber}
-                    maxSelectable={maxSelectable}
-                  />
+                  <div className="max-h-72 overflow-y-auto pr-1">
+                    <NumbersGrid
+                      numbers={numbers}
+                      selected={selected}
+                      onToggle={toggle}
+                      currentUserId={user?.id}
+                      flashing={flashing}
+                      finished={finished}
+                      winnerNumber={rifa.winnerNumber}
+                      maxSelectable={maxSelectable}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             )}

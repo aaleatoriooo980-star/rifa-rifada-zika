@@ -39,7 +39,7 @@ export function PackagesPicker({
         )}
       </div>
 
-      <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible md:grid-cols-3 lg:grid-cols-4">
+      <div className="-mx-1 flex flex-wrap gap-3 px-1 pb-2 sm:grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
         {sorted.map((pkg) => {
           const normal = pkg.quantity * pricePerNumber;
           const savings = Math.max(0, normal - pkg.price);

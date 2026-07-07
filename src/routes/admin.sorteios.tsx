@@ -102,7 +102,7 @@ function VideoHistorySection({
         filename: result.filename,
         sizeBytes: result.blob.size,
         createdAt: new Date().toISOString(),
-        format: result.format,
+        format: result.format === "png" ? "png" : "mp4",
       };
       saveDrawVideo(rifa.id, videoMeta);
       toast.success("Vídeo gerado e download iniciado!");
@@ -352,7 +352,7 @@ function Sorteios() {
           }
           setConfirmCloseId(null);
         }}
-        variant="destructive"
+        destructive
       />
     </div>
   );

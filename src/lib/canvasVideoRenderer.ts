@@ -497,6 +497,62 @@ export async function generateResultPng(data: DrawVideoData): Promise<RenderResu
   });
 }
 
+// ─── Audio scheduler helper ───────────────────────────────────────────────────
+function scheduleAudioForDraw(audioCtx: AudioContext, destination: AudioNode) {
+  const now = audioCtx.currentTime;
+
+  // 1. Countdown ticks (5.0, 6.0, 7.0 seconds)
+  [5.0, 6.0, 7.0].forEach((timeOffset) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, now + timeOffset);
+    
+    gain.gain.setValueAtTime(0.001, now + timeOffset);
+    gain.gain.exponentialRampToValueAtTime(0.25, now + timeOffset + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + timeOffset + 0.25);
+    
+    osc.connect(gain).connect(destination);
+    osc.start(now + timeOffset);
+    osc.stop(now + timeOffset + 0.28);
+  });
+
+  // 2. Spin suspense (8.0 to 13.0 seconds)
+  [140, 210, 320].forEach((f, idx) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = idx === 0 ? "sawtooth" : "sine";
+    osc.frequency.setValueAtTime(f, now + 8.0);
+    
+    gain.gain.setValueAtTime(0, now + 8.0);
+    gain.gain.linearRampToValueAtTime(0.03, now + 8.0 + 0.4);
+    gain.gain.linearRampToValueAtTime(0.03, now + 12.8);
+    gain.gain.linearRampToValueAtTime(0, now + 13.0);
+    
+    osc.connect(gain).connect(destination);
+    osc.start(now + 8.0);
+    osc.stop(now + 13.05);
+  });
+
+  // 3. Victory sound (13.0 seconds onward)
+  const victoryNotes = [523.25, 659.25, 783.99, 1046.5];
+  victoryNotes.forEach((f, idx) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(f, now + 13.0 + idx * 0.12);
+    
+    const start = now + 13.0 + idx * 0.12;
+    gain.gain.setValueAtTime(0.001, start);
+    gain.gain.exponentialRampToValueAtTime(0.3, start + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, start + 0.5);
+    
+    osc.connect(gain).connect(destination);
+    osc.start(start);
+    osc.stop(start + 0.55);
+  });
+}
+
 // ─── Video: canvas stream → MediaRecorder ────────────────────────────────────
 export async function renderDrawVideo(
   data: DrawVideoData,
@@ -520,8 +576,30 @@ export async function renderDrawVideo(
   }
 
   const confettiParticles = makeConfetti();
+  
+  // Set up AudioContext recording stream
+  let audioCtx: AudioContext | null = null;
+  let audioDest: MediaStreamAudioDestinationNode | null = null;
+  try {
+    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    audioDest = audioCtx.createMediaStreamDestination();
+  } catch (e) {
+    console.error("AudioContext recording not supported:", e);
+  }
+
   const stream = (canvas as any).captureStream(FPS) as MediaStream;
-  const recorder = new MediaRecorder(stream, {
+  let combinedStream = stream;
+  if (audioDest) {
+    const audioTracks = audioDest.stream.getAudioTracks();
+    if (audioTracks.length > 0) {
+      combinedStream = new MediaStream([
+        ...stream.getVideoTracks(),
+        ...audioTracks
+      ]);
+    }
+  }
+
+  const recorder = new MediaRecorder(combinedStream, {
     mimeType: picked.mime,
     videoBitsPerSecond: 8_000_000,
   });
@@ -534,6 +612,10 @@ export async function renderDrawVideo(
     recorder.onstop = async () => {
       const rawBlob = new Blob(chunks, { type: picked.mime });
       const ts = new Date().toISOString().replace(/[:.]/g, "-");
+
+      if (audioCtx) {
+        try { audioCtx.close(); } catch {}
+      }
 
       // If native MP4: no conversion needed
       if (picked.isNativeMp4) {
@@ -557,17 +639,19 @@ export async function renderDrawVideo(
       }
     };
 
+    // Pre-schedule synthesized sound effect milestones
+    if (audioCtx && audioDest) {
+      scheduleAudioForDraw(audioCtx, audioDest);
+    }
+
     recorder.start(200);
 
     let frame = 0;
-    let lastTime: number | null = null;
-    let animFrameId = 0;
+    const frameInterval = 1000 / FPS;
 
-    const renderFrame = (now: number) => {
-      if (lastTime === null) lastTime = now;
-      const dt = Math.min((now - lastTime) / 1000, 0.1);
-      lastTime = now;
+    const renderFrame = () => {
       const t = frame / FPS;
+      const dt = 1 / FPS; // Constant dt for physics/confetti consistency
       frame++;
 
       const drawPct = Math.round((frame / totalFrames) * 50);
@@ -576,14 +660,13 @@ export async function renderDrawVideo(
       renderFrameAt(ctx, t, dt, data, rifaImg, confettiParticles);
 
       if (frame < totalFrames) {
-        animFrameId = requestAnimationFrame(renderFrame);
+        setTimeout(renderFrame, frameInterval);
       } else {
-        cancelAnimationFrame(animFrameId);
         recorder.stop();
       }
     };
 
-    animFrameId = requestAnimationFrame(renderFrame);
+    setTimeout(renderFrame, frameInterval);
   });
 }
 
@@ -605,7 +688,7 @@ async function convertToMp4(input: Blob, onProgress?: (pct: number) => void): Pr
   });
 
   await ffmpeg.writeFile("input.webm", await fetchFile(input));
-  await ffmpeg.exec(["-i", "input.webm", "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-an", "output.mp4"]);
+  await ffmpeg.exec(["-i", "input.webm", "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-c:a", "aac", "output.mp4"]);
   const data = (await ffmpeg.readFile("output.mp4")) as Uint8Array;
   return new Blob([new Uint8Array(data)], { type: "video/mp4" });
 }
