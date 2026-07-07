@@ -206,12 +206,17 @@ function Dashboard() {
                           <div className="font-semibold text-sm">{buyer?.name ?? "Usuário"}</div>
                           <div className="text-xs text-muted-foreground">{buyer?.phone ?? "Sem telefone"}</div>
                         </div>
-                        <Badge
-                          variant={o.status === "pago" ? "default" : "secondary"}
-                          className={o.status === "pago" ? "bg-success text-success-foreground" : ""}
-                        >
-                          {o.status}
-                        </Badge>
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge
+                            variant={o.status === "pago" ? "default" : "secondary"}
+                            className={o.status === "pago" ? "bg-success text-success-foreground" : ""}
+                          >
+                            {o.status}
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px] px-1 py-0 border-primary/20 bg-primary/5 text-primary">
+                            {o.origin === "balcao" ? "🏪 Balcão" : "🌐 Online"}
+                          </Badge>
+                        </div>
                       </div>
                       <div className="text-xs space-y-1 pt-1.5 border-t">
                         <div>Rifa: <span className="font-medium text-foreground">{rifa?.title}</span></div>
@@ -232,8 +237,11 @@ function Dashboard() {
                     {/* Desktop version row */}
                     <div className="hidden sm:flex items-center justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-medium">
-                          {buyer?.name ?? "Usuário"} {buyer?.phone ? `(${buyer.phone})` : ""}
+                        <div className="truncate text-sm font-medium flex items-center gap-2">
+                          <span>{buyer?.name ?? "Usuário"} {buyer?.phone ? `(${buyer.phone})` : ""}</span>
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/20 bg-primary/5 text-primary">
+                            {o.origin === "balcao" ? "🏪 Balcão" : "🌐 Online"}
+                          </Badge>
                         </div>
                         <div className="truncate text-xs text-muted-foreground">
                           {rifa?.title} · {o.numbers.length} nº ·{" "}
@@ -369,11 +377,29 @@ function Dashboard() {
                     <span className="font-medium text-foreground">{rifa?.title ?? "—"}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-muted-foreground">Origem</span>
+                    <span className="font-medium text-foreground">
+                      {detailOrder.origin === "balcao" ? "🏪 Balcão" : "🌐 Online"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Forma de Pagamento</span>
+                    <span className="font-medium uppercase text-foreground">
+                      {detailOrder.paymentMethod || "PIX"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Status</span>
+                    <span className={`font-semibold ${detailOrder.status === "pago" ? "text-success" : "text-warning"}`}>
+                      {detailOrder.status === "pago" ? "Pago" : "Pendente"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-muted-foreground">Data da compra</span>
                     <span className="font-medium text-foreground">{formatDateTime(detailOrder.createdAt)}</span>
                   </div>
                   <div className="flex justify-between border-t pt-2 mt-2 font-semibold">
-                    <span className="text-muted-foreground">Valor pago</span>
+                    <span className="text-muted-foreground">Valor</span>
                     <span className="text-primary">{formatBRL(detailOrder.total)}</span>
                   </div>
                 </div>

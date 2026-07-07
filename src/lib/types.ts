@@ -61,6 +61,8 @@ export interface Order {
   status: PaymentStatus;
   createdAt: string;
   paidAt?: string;
+  paymentMethod?: string;
+  origin?: "online" | "balcao";
 }
 
 export interface Draw {

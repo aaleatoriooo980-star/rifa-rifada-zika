@@ -12,6 +12,7 @@ interface AuthContextValue {
   user: User | null;
   login: (email: string, password: string) => User | null;
   register: (data: Omit<User, "id" | "role">) => User;
+  createCounterClient: (name: string, phone: string) => User;
   logout: () => void;
   users: User[];
 }
@@ -61,13 +62,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return newUser;
   };
 
+  const createCounterClient = (name: string, phone: string) => {
+    const newUser: User = {
+      id: `u-${Date.now()}`,
+      name,
+      phone,
+      email: `${phone.replace(/\D/g, "") || Date.now()}@balcao.com`,
+      password: "dummy-password",
+      role: "cliente",
+    };
+    setUsers((prev) => [...prev, newUser]);
+    return newUser;
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem(SESSION_KEY);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, users }}>
+    <AuthContext.Provider value={{ user, login, register, createCounterClient, logout, users }}>
       {children}
     </AuthContext.Provider>
   );

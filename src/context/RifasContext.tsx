@@ -35,6 +35,13 @@ interface RifasContextValue extends State {
     packageId?: string | null,
   ) => Order;
   confirmPayment: (orderId: string) => void;
+  createCounterSale: (data: {
+    rifaId: string;
+    userId: string;
+    numbers: number[];
+    paymentMethod: string;
+    status: "pago" | "pendente";
+  }) => Order;
   getNumbersForRifa: (rifaId: string) => RifaNumber[];
   getBuyersForRifa: (rifaId: string) => { userId: string; numbers: number[] }[];
   drawRifa: (
@@ -202,6 +209,63 @@ export function RifasProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const createCounterSale = useCallback(
+    (data: {
+      rifaId: string;
+      userId: string;
+      numbers: number[];
+      paymentMethod: string;
+      status: "pago" | "pendente";
+    }) => {
+      const { rifaId, userId, numbers: nums, paymentMethod, status } = data;
+      const rifa = state.rifas.find((r) => r.id === rifaId);
+      if (!rifa) throw new Error("Rifa não encontrada.");
+      if (isRifaClosed(rifa)) {
+        throw new Error("Esta rifa foi encerrada. Não é mais possível realizar compras.");
+      }
+      const alreadyTaken = state.numbers.some(
+        (n) => n.rifaId === rifaId && nums.includes(n.number) && n.status !== "disponivel"
+      );
+      if (alreadyTaken) {
+        throw new Error("Um ou mais números selecionados já estão reservados ou vendidos.");
+      }
+      const { total } = computePrice(
+        nums.length,
+        rifa.pricePerNumber,
+        rifa.packages,
+        null
+      );
+      const order: Order = {
+        id: `o-${Date.now()}`,
+        rifaId,
+        userId,
+        numbers: nums,
+        total,
+        status,
+        createdAt: new Date().toISOString(),
+        paidAt: status === "pago" ? new Date().toISOString() : undefined,
+        paymentMethod,
+        origin: "balcao",
+      };
+      setState((s) => ({
+        ...s,
+        orders: [...s.orders, order],
+        numbers: s.numbers.map((n) =>
+          n.rifaId === rifaId && nums.includes(n.number)
+            ? {
+                ...n,
+                status: status === "pago" ? ("vendido" as const) : ("aguardando" as const),
+                userId,
+                orderId: order.id,
+              }
+            : n
+        ),
+      }));
+      return order;
+    },
+    [state.rifas, state.numbers]
+  );
+
   const getNumbersForRifa = useCallback(
     (rifaId: string) => state.numbers.filter((n) => n.rifaId === rifaId),
     [state.numbers],
@@ -283,6 +347,7 @@ export function RifasProvider({ children }: { children: ReactNode }) {
       unarchiveRifa,
       reserveNumbers,
       confirmPayment,
+      createCounterSale,
       getNumbersForRifa,
       getBuyersForRifa,
       drawRifa,
@@ -298,6 +363,7 @@ export function RifasProvider({ children }: { children: ReactNode }) {
       unarchiveRifa,
       reserveNumbers,
       confirmPayment,
+      createCounterSale,
       getNumbersForRifa,
       getBuyersForRifa,
       drawRifa,

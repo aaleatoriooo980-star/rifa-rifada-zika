@@ -16,6 +16,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as RifaIdRouteImport } from './routes/rifa.$id'
+import { Route as AdminVendaBalcaoRouteImport } from './routes/admin.venda-balcao'
 import { Route as AdminSorteiosRouteImport } from './routes/admin.sorteios'
 import { Route as AdminRifasRouteImport } from './routes/admin.rifas'
 import { Route as AdminRifasIndexRouteImport } from './routes/admin.rifas.index'
@@ -57,6 +58,11 @@ const RifaIdRoute = RifaIdRouteImport.update({
   path: '/rifa/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminVendaBalcaoRoute = AdminVendaBalcaoRouteImport.update({
+  id: '/venda-balcao',
+  path: '/venda-balcao',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSorteiosRoute = AdminSorteiosRouteImport.update({
   id: '/sorteios',
   path: '/sorteios',
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/admin/rifas': typeof AdminRifasRouteWithChildren
   '/admin/sorteios': typeof AdminSorteiosRoute
+  '/admin/venda-balcao': typeof AdminVendaBalcaoRoute
   '/rifa/$id': typeof RifaIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/rifas/$id': typeof AdminRifasIdRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/minhas-rifas': typeof MinhasRifasRoute
   '/register': typeof RegisterRoute
   '/admin/sorteios': typeof AdminSorteiosRoute
+  '/admin/venda-balcao': typeof AdminVendaBalcaoRoute
   '/rifa/$id': typeof RifaIdRoute
   '/admin': typeof AdminIndexRoute
   '/admin/rifas/$id': typeof AdminRifasIdRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/admin/rifas': typeof AdminRifasRouteWithChildren
   '/admin/sorteios': typeof AdminSorteiosRoute
+  '/admin/venda-balcao': typeof AdminVendaBalcaoRoute
   '/rifa/$id': typeof RifaIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/rifas/$id': typeof AdminRifasIdRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin/rifas'
     | '/admin/sorteios'
+    | '/admin/venda-balcao'
     | '/rifa/$id'
     | '/admin/'
     | '/admin/rifas/$id'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/minhas-rifas'
     | '/register'
     | '/admin/sorteios'
+    | '/admin/venda-balcao'
     | '/rifa/$id'
     | '/admin'
     | '/admin/rifas/$id'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin/rifas'
     | '/admin/sorteios'
+    | '/admin/venda-balcao'
     | '/rifa/$id'
     | '/admin/'
     | '/admin/rifas/$id'
@@ -227,6 +239,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RifaIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/venda-balcao': {
+      id: '/admin/venda-balcao'
+      path: '/venda-balcao'
+      fullPath: '/admin/venda-balcao'
+      preLoaderRoute: typeof AdminVendaBalcaoRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/sorteios': {
       id: '/admin/sorteios'
       path: '/sorteios'
@@ -284,12 +303,14 @@ const AdminRifasRouteWithChildren = AdminRifasRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminRifasRoute: typeof AdminRifasRouteWithChildren
   AdminSorteiosRoute: typeof AdminSorteiosRoute
+  AdminVendaBalcaoRoute: typeof AdminVendaBalcaoRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminRifasRoute: AdminRifasRouteWithChildren,
   AdminSorteiosRoute: AdminSorteiosRoute,
+  AdminVendaBalcaoRoute: AdminVendaBalcaoRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

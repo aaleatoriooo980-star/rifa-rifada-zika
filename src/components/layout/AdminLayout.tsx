@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Store,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ const items = [
   { to: "/admin/rifas" as const, icon: Ticket, label: "Rifas" },
   { to: "/admin/rifas/nova" as const, icon: Plus, label: "Nova Rifa" },
   { to: "/admin/sorteios" as const, icon: Trophy, label: "Sorteios" },
+  { to: "/admin/venda-balcao" as const, icon: Store, label: "Venda no Balcão" },
 ];
 
 export function AdminLayout() {
