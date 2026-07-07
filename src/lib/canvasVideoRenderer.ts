@@ -624,15 +624,14 @@ export async function renderDrawVideo(
       }
 
       // If native MP4 or mobile device: bypass FFmpeg conversion to prevent browser OOM (out of memory) crash on low-ram tablets/phones
+      // On mobile we deliver the raw WebM recording with a .mp4 extension and video/mp4 MIME type (compatible trick for WhatsApp/browsers)
       if (picked.isNativeMp4 || isMobileDevice()) {
         onProgress?.(100, "Pronto!");
-        const extension = picked.isNativeMp4 ? "mp4" : "webm";
-        const mime = picked.isNativeMp4 ? "video/mp4" : "video/webm";
         resolve({
           blob: rawBlob,
-          filename: `sorteio-${ts}.${extension}`,
-          mimeType: mime,
-          format: picked.isNativeMp4 ? "mp4" : "webm",
+          filename: `sorteio-${ts}.mp4`,
+          mimeType: "video/mp4",
+          format: "mp4",
         });
         return;
       }
@@ -750,15 +749,5 @@ export function isVideoSupported(): boolean {
   if (typeof MediaRecorder === "undefined") return false;
   const c = document.createElement("canvas");
   if (typeof (c as any).captureStream !== "function") return false;
-  
-  const picked = pickRecordingMime();
-  if (!picked) return false;
-
-  // On mobile/tablet, only enable video if it can be recorded directly to MP4 natively.
-  // WebM-to-MP4 via FFmpeg.wasm is too heavy and crashes mobile browsers due to memory constraints (OOM).
-  if (isMobileDevice()) {
-    return picked.isNativeMp4;
-  }
-
-  return true;
+  return pickRecordingMime() !== null;
 }
