@@ -243,15 +243,23 @@ function VendaBalcao() {
     setSuccessOpen(false);
     setLastCreatedOrder(null);
   };
-
+  // WhatsApp Message Composer
+  const handleWhatsAppShare = () => {
+    if (!lastCreatedOrder || !selectedClient || !selectedRifa) return;
+    const formattedNumbers = lastCreatedOrder.numbers
+      .map((n: number) => String(n))
+      .join(", ");
+    const text = `Olá ${selectedClient.name}!\n\nSua compra foi registrada com sucesso.\n\nRifa: ${selectedRifa.title}\nNúmeros: ${formattedNumbers}\nValor: ${formatBRL(lastCreatedOrder.total)}\n\nBoa sorte!`;
+    const cleanPhone = selectedClient.phone?.replace(/\D/g, "") || "";
+    const url = `https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
+  };
 
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       <div>
-        <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-          <span>🏪</span> Venda no Balcão
-        </h1>
+        <h1 className="font-display text-2xl font-bold">Venda no Balcão</h1>
         <p className="text-sm text-muted-foreground">
           Registre uma venda presencial de forma rápida para os clientes da loja.
         </p>
@@ -757,20 +765,28 @@ function VendaBalcao() {
             </div>
           )}
 
-          <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={resetForm} className="flex-1">
-              Nova Venda
-            </Button>
+          <div className="flex flex-col gap-2 pt-2">
             <Button
-              variant="default"
-              onClick={() => {
-                resetForm();
-                navigate({ to: "/admin" });
-              }}
-              className="flex-1 bg-primary text-primary-foreground"
+              onClick={handleWhatsAppShare}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white w-full flex items-center justify-center gap-2"
             >
-              Ver Venda
+              Enviar Comprovante por WhatsApp
             </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={resetForm} className="flex-1">
+                Nova Venda
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => {
+                  resetForm();
+                  navigate({ to: "/admin" });
+                }}
+                className="flex-1 bg-primary text-primary-foreground"
+              >
+                Ver Venda
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
