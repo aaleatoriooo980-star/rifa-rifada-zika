@@ -36,6 +36,12 @@ export function isIOSSafari(): boolean {
   return /iP(hone|ad|od)/i.test(ua) && !!ua.match(/Safari/) && !ua.match(/Chrome/);
 }
 
+export function isMobileDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+}
+
 function isSafariDesktop(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
@@ -617,10 +623,17 @@ export async function renderDrawVideo(
         try { audioCtx.close(); } catch {}
       }
 
-      // If native MP4: no conversion needed
-      if (picked.isNativeMp4) {
+      // If native MP4 or mobile device: bypass FFmpeg conversion to prevent browser OOM (out of memory) crash on low-ram tablets/phones
+      if (picked.isNativeMp4 || isMobileDevice()) {
         onProgress?.(100, "Pronto!");
-        resolve({ blob: rawBlob, filename: `sorteio-${ts}.mp4`, mimeType: "video/mp4", format: "mp4" });
+        const extension = picked.isNativeMp4 ? "mp4" : "webm";
+        const mime = picked.isNativeMp4 ? "video/mp4" : "video/webm";
+        resolve({
+          blob: rawBlob,
+          filename: `sorteio-${ts}.${extension}`,
+          mimeType: mime,
+          format: picked.isNativeMp4 ? "mp4" : "webm",
+        });
         return;
       }
 
