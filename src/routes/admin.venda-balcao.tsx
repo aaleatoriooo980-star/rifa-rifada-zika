@@ -257,17 +257,17 @@ function VendaBalcao() {
 
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <div className="space-y-6 pb-12">
       <div>
-        <h1 className="font-display text-2xl font-bold">Venda no Balcão</h1>
+        <h1 className="font-display text-2xl font-bold">Venda no Balc\u00e3o</h1>
         <p className="text-sm text-muted-foreground">
-          Registre uma venda presencial de forma rápida para os clientes da loja.
+          Registre uma venda presencial de forma r\u00e1pida para os clientes da loja.
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-[1fr_350px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         {/* Main flow cards */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           {/* Step 1: Select Rifa */}
           <Card className="shadow-soft">
             <CardContent className="p-5 space-y-4">
@@ -278,11 +278,11 @@ function VendaBalcao() {
               {activeRifas.length === 0 ? (
                 <div className="flex items-center gap-2 text-destructive py-2">
                   <AlertCircle className="h-5 w-5" />
-                  <span>Não existem rifas ativas no momento.</span>
+                  <span>N\u00e3o existem rifas ativas no momento.</span>
                 </div>
               ) : (
                 <div className="w-full">
-                  <Label htmlFor="rifa-select">Rifas Disponíveis</Label>
+                  <Label htmlFor="rifa-select">Rifas Dispon\u00edveis</Label>
                   <div className="mt-1.5">
                     <SearchableSelect
                       value={selectedRifaId}
@@ -378,7 +378,7 @@ function VendaBalcao() {
                         <Label htmlFor="new-name">Nome Completo</Label>
                         <Input
                           id="new-name"
-                          placeholder="Ex: João Silva"
+                          placeholder="Ex: Jo\u00e3o Silva"
                           value={newClientName}
                           onChange={(e) => setNewClientName(e.target.value)}
                         />
@@ -412,14 +412,14 @@ function VendaBalcao() {
                 {/* Selected Client Card */}
                 {selectedClientId && selectedClient && (
                   <div className="flex items-center justify-between border p-3 rounded-lg bg-primary/5 border-primary/10">
-                    <div className="flex gap-3 items-center">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                    <div className="flex gap-3 items-center min-w-0">
+                      <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
                         {selectedClient.name[0].toUpperCase()}
                       </div>
-                      <div>
-                        <div className="font-semibold text-sm">{selectedClient.name}</div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-sm truncate">{selectedClient.name}</div>
                         <div className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Phone className="h-3 w-3" /> {selectedClient.phone || "Sem Telefone"}
+                          <Phone className="h-3 w-3 shrink-0" /> {selectedClient.phone || "Sem Telefone"}
                         </div>
                       </div>
                     </div>
@@ -427,7 +427,7 @@ function VendaBalcao() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setSelectedClientId("")}
-                      className="text-destructive hover:bg-destructive/10"
+                      className="text-destructive hover:bg-destructive/10 shrink-0 ml-2"
                     >
                       Remover
                     </Button>
@@ -437,14 +437,14 @@ function VendaBalcao() {
             </Card>
           )}
 
-          {/* Step 3: Escolha dos números */}
+          {/* Step 3: Escolha dos n\u00fameros */}
           {selectedRifaId && selectedClientId && (
             <Card className="shadow-soft">
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b justify-between">
                   <div className="flex items-center gap-2">
                     <Ticket className="h-5 w-5 text-primary" />
-                    <h3 className="font-display font-semibold">Passo 3: Escolha dos Números</h3>
+                    <h3 className="font-display font-semibold">Passo 3: Escolha dos N\u00fameros</h3>
                   </div>
                   {selectedNums.length > 0 && (
                     <Badge className="bg-primary text-primary-foreground">
@@ -482,7 +482,7 @@ function VendaBalcao() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:justify-between text-xs text-muted-foreground gap-2">
-                      <span>Ou clique nos números disponíveis para selecionar:</span>
+                      <span>Ou clique nos n\u00fameros dispon\u00edveis para selecionar:</span>
                       <div className="flex flex-wrap gap-2.5">
                         <span className="flex items-center gap-1">
                           <span className="w-2.5 h-2.5 rounded bg-success/20 inline-block"></span> Disp.
@@ -501,7 +501,7 @@ function VendaBalcao() {
                         selected={selectedNums}
                         onToggle={(n) => {
                           if (maxSelectable != null && !selectedNums.includes(n) && selectedNums.length >= maxSelectable) {
-                            toast.error("Quantidade máxima do pacote atingida.");
+                            toast.error("Quantidade m\u00e1xima do pacote atingida.");
                             return;
                           }
                           setSelectedNums((prev) =>
@@ -521,9 +521,9 @@ function VendaBalcao() {
             <Dialog open={!!pendingPackage} onOpenChange={() => setPendingPackage(null)}>
               <DialogContent className="rounded-xl max-w-sm">
                 <DialogHeader>
-                  <DialogTitle>Ajustar seleção</DialogTitle>
+                  <DialogTitle>Ajustar sele\u00e7\u00e3o</DialogTitle>
                   <DialogDescription>
-                    Você selecionou {selectedNums.length} números, mas o pacote permite apenas{" "}
+                    Voc\u00ea selecionou {selectedNums.length} n\u00fameros, mas o pacote permite apenas{" "}
                     <strong>{pendingPackage.quantity}</strong>. Deseja manter apenas os primeiros{" "}
                     {pendingPackage.quantity} e aplicar o pacote?
                   </DialogDescription>
@@ -551,7 +551,7 @@ function VendaBalcao() {
 
         {/* Sidebar Summary & Payment Details */}
         <div className="space-y-6">
-          <Card className="shadow-soft sticky top-4">
+          <Card className="shadow-soft lg:sticky lg:top-4">
             <CardContent className="p-5 space-y-5">
               <h3 className="font-display font-bold border-b pb-2 text-lg">Resumo da Venda</h3>
 
