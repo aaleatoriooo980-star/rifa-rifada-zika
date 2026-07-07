@@ -259,9 +259,9 @@ function VendaBalcao() {
   return (
     <div className="space-y-6 pb-12">
       <div>
-        <h1 className="font-display text-2xl font-bold">Venda no Balc\u00e3o</h1>
+        <h1 className="font-display text-2xl font-bold">Venda no Balcão</h1>
         <p className="text-sm text-muted-foreground">
-          Registre uma venda presencial de forma r\u00e1pida para os clientes da loja.
+          Registre uma venda presencial de forma rápida para os clientes da loja.
         </p>
       </div>
 
@@ -278,11 +278,11 @@ function VendaBalcao() {
               {activeRifas.length === 0 ? (
                 <div className="flex items-center gap-2 text-destructive py-2">
                   <AlertCircle className="h-5 w-5" />
-                  <span>N\u00e3o existem rifas ativas no momento.</span>
+                  <span>Não existem rifas ativas no momento.</span>
                 </div>
               ) : (
                 <div className="w-full">
-                  <Label htmlFor="rifa-select">Rifas Dispon\u00edveis</Label>
+                  <Label htmlFor="rifa-select">Rifas Disponíveis</Label>
                   <div className="mt-1.5">
                     <SearchableSelect
                       value={selectedRifaId}
@@ -378,7 +378,7 @@ function VendaBalcao() {
                         <Label htmlFor="new-name">Nome Completo</Label>
                         <Input
                           id="new-name"
-                          placeholder="Ex: Jo\u00e3o Silva"
+                          placeholder="Ex: João Silva"
                           value={newClientName}
                           onChange={(e) => setNewClientName(e.target.value)}
                         />
@@ -444,7 +444,7 @@ function VendaBalcao() {
                 <div className="flex items-center gap-2 pb-2 border-b justify-between">
                   <div className="flex items-center gap-2">
                     <Ticket className="h-5 w-5 text-primary" />
-                    <h3 className="font-display font-semibold">Passo 3: Escolha dos N\u00fameros</h3>
+                    <h3 className="font-display font-semibold">Passo 3: Escolha dos Números</h3>
                   </div>
                   {selectedNums.length > 0 && (
                     <Badge className="bg-primary text-primary-foreground">
@@ -482,7 +482,7 @@ function VendaBalcao() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:justify-between text-xs text-muted-foreground gap-2">
-                      <span>Ou clique nos n\u00fameros dispon\u00edveis para selecionar:</span>
+                      <span>Ou clique nos números disponíveis para selecionar:</span>
                       <div className="flex flex-wrap gap-2.5">
                         <span className="flex items-center gap-1">
                           <span className="w-2.5 h-2.5 rounded bg-success/20 inline-block"></span> Disp.
@@ -501,7 +501,7 @@ function VendaBalcao() {
                         selected={selectedNums}
                         onToggle={(n) => {
                           if (maxSelectable != null && !selectedNums.includes(n) && selectedNums.length >= maxSelectable) {
-                            toast.error("Quantidade m\u00e1xima do pacote atingida.");
+                            toast.error("Quantidade máxima do pacote atingida.");
                             return;
                           }
                           setSelectedNums((prev) =>
@@ -521,9 +521,9 @@ function VendaBalcao() {
             <Dialog open={!!pendingPackage} onOpenChange={() => setPendingPackage(null)}>
               <DialogContent className="rounded-xl max-w-sm">
                 <DialogHeader>
-                  <DialogTitle>Ajustar sele\u00e7\u00e3o</DialogTitle>
+                  <DialogTitle>Ajustar seleção</DialogTitle>
                   <DialogDescription>
-                    Voc\u00ea selecionou {selectedNums.length} n\u00fameros, mas o pacote permite apenas{" "}
+                    Você selecionou {selectedNums.length} números, mas o pacote permite apenas{" "}
                     <strong>{pendingPackage.quantity}</strong>. Deseja manter apenas os primeiros{" "}
                     {pendingPackage.quantity} e aplicar o pacote?
                   </DialogDescription>
