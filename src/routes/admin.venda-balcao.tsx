@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { NumbersGrid } from "@/components/rifa/NumbersGrid";
+import { PackagesPicker } from "@/components/rifa/PackagesPicker";
+import { QuickBuyBar } from "@/components/rifa/QuickBuyBar";
 import {
   Dialog,
   DialogContent,
@@ -21,12 +23,12 @@ import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { formatBRL } from "@/lib/format";
 import { computePrice } from "@/lib/pricing";
 import { isRifaClosed } from "@/lib/rifaStatus";
+import type { RifaPackage } from "@/lib/types";
 import {
   Ticket,
   User,
   Phone,
   Search,
-  Plus,
   CheckCircle,
   AlertCircle,
   ArrowRight,
@@ -85,9 +87,35 @@ function VendaBalcao() {
   // Selected Numbers
   const [selectedNums, setSelectedNums] = useState<number[]>([]);
 
+  // Active promotional package
+  const [activePackageId, setActivePackageId] = useState<string | null>(null);
+  const [pendingPackage, setPendingPackage] = useState<RifaPackage | null>(null);
+
+  const activePackage = useMemo<RifaPackage | null>(() => {
+    if (!selectedRifa || !activePackageId) return null;
+    return selectedRifa.packages?.find((p) => p.id === activePackageId) ?? null;
+  }, [selectedRifa, activePackageId]);
+
+  const maxSelectable = activePackage ? activePackage.quantity : undefined;
+
+  const pickPackage = (pkg: RifaPackage) => {
+    if (selectedNums.length > pkg.quantity) {
+      setPendingPackage(pkg);
+      return;
+    }
+    setActivePackageId(pkg.id);
+    toast.success("Pacote promocional selecionado.");
+  };
+
+  const clearPackage = () => {
+    setActivePackageId(null);
+  };
+
   // Reset selected numbers when changing Rifa
   useEffect(() => {
     setSelectedNums([]);
+    setActivePackageId(null);
+    setPendingPackage(null);
   }, [selectedRifaId]);
 
   // Step 2: Cliente
@@ -138,9 +166,9 @@ function VendaBalcao() {
       selectedNums.length,
       selectedRifa.pricePerNumber,
       selectedRifa.packages,
-      null
+      activePackageId
     );
-  }, [selectedNums.length, selectedRifa]);
+  }, [selectedNums.length, selectedRifa, activePackageId]);
 
   // Step 5: Payment Method
   const [paymentMethod, setPaymentMethod] = useState<string>("");
@@ -206,6 +234,8 @@ function VendaBalcao() {
 
   const resetForm = () => {
     setSelectedNums([]);
+    setActivePackageId(null);
+    setPendingPackage(null);
     setSelectedClientId("");
     setClientSearch("");
     setPaymentMethod("");
@@ -213,33 +243,7 @@ function VendaBalcao() {
     setLastCreatedOrder(null);
   };
 
-  // WhatsApp Message Composer
-  const handleWhatsAppShare = () => {
-    if (!lastCreatedOrder || !selectedClient || !selectedRifa) return;
-    
-    const formattedNumbers = lastCreatedOrder.numbers
-      .map((n: number) => String(n))
-      .join("\n");
 
-    const text = `Olá ${selectedClient.name}!
-
-Sua compra foi registrada com sucesso.
-
-Rifa:
-${selectedRifa.title}
-
-Números:
-${formattedNumbers}
-
-Valor:
-${formatBRL(lastCreatedOrder.total)}
-
-Boa sorte!`;
-
-    const cleanPhone = selectedClient.phone?.replace(/\D/g, "") || "";
-    const url = `https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(text)}`;
-    window.open(url, "_blank");
-  };
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
@@ -446,8 +450,30 @@ Boa sorte!`;
                   </div>
                 ) : (
                   <div className="space-y-4">
+                    {/* Promotional packages */}
+                    {selectedRifa?.packages && selectedRifa.packages.length > 0 && (
+                      <PackagesPicker
+                        packages={selectedRifa.packages}
+                        activeId={activePackageId}
+                        onPick={pickPackage}
+                        onClear={clearPackage}
+                        pricePerNumber={selectedRifa.pricePerNumber}
+                      />
+                    )}
+
+                    {/* Random / Quick selection */}
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground font-medium">Adicionar aleatoriamente:</p>
+                      <QuickBuyBar
+                        numbers={numbers}
+                        selected={selectedNums}
+                        onChange={setSelectedNums}
+                        maxSelectable={maxSelectable}
+                      />
+                    </div>
+
                     <div className="flex flex-col sm:flex-row sm:justify-between text-xs text-muted-foreground gap-2">
-                      <span>Clique nos números disponíveis para selecionar:</span>
+                      <span>Ou clique nos números disponíveis para selecionar:</span>
                       <div className="flex flex-wrap gap-2.5">
                         <span className="flex items-center gap-1">
                           <span className="w-2.5 h-2.5 rounded bg-success/20 inline-block"></span> Disp.
@@ -465,6 +491,10 @@ Boa sorte!`;
                         numbers={numbers}
                         selected={selectedNums}
                         onToggle={(n) => {
+                          if (maxSelectable != null && !selectedNums.includes(n) && selectedNums.length >= maxSelectable) {
+                            toast.error("Quantidade máxima do pacote atingida.");
+                            return;
+                          }
                           setSelectedNums((prev) =>
                             prev.includes(n) ? prev.filter((x) => x !== n) : [...prev, n]
                           );
@@ -475,6 +505,38 @@ Boa sorte!`;
                 )}
               </CardContent>
             </Card>
+          )}
+
+          {/* Confirm reduce selection for pending package */}
+          {pendingPackage && (
+            <Dialog open={!!pendingPackage} onOpenChange={() => setPendingPackage(null)}>
+              <DialogContent className="rounded-xl max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>Ajustar seleção</DialogTitle>
+                  <DialogDescription>
+                    Você selecionou {selectedNums.length} números, mas o pacote permite apenas{" "}
+                    <strong>{pendingPackage.quantity}</strong>. Deseja manter apenas os primeiros{" "}
+                    {pendingPackage.quantity} e aplicar o pacote?
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="flex gap-2">
+                  <Button variant="ghost" onClick={() => setPendingPackage(null)} className="flex-1">
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setSelectedNums((s) => [...s].slice(0, pendingPackage.quantity));
+                      setActivePackageId(pendingPackage.id);
+                      setPendingPackage(null);
+                      toast.success("Pacote aplicado.");
+                    }}
+                    className="flex-1 bg-primary text-primary-foreground"
+                  >
+                    Aplicar
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           )}
         </div>
 
@@ -653,8 +715,8 @@ Boa sorte!`;
       </Dialog>
 
       {/* Success Dialog (Receipt / Comprovante) */}
-      <Dialog open={successOpen} onOpenChange={() => {}}>
-        <DialogContent className="rounded-xl max-w-md pointer-events-auto">
+      <Dialog open={successOpen} onOpenChange={(open) => { if (!open) resetForm(); }}>
+        <DialogContent className="rounded-xl max-w-md">
           <DialogHeader className="items-center text-center">
             <CheckCircle className="h-12 w-12 text-success mb-2 animate-bounce" />
             <DialogTitle>Venda realizada com sucesso.</DialogTitle>
@@ -694,29 +756,20 @@ Boa sorte!`;
             </div>
           )}
 
-          <div className="flex flex-col gap-2 pt-2">
-            <Button
-              onClick={handleWhatsAppShare}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2"
-            >
-              <span>💬 Enviar Comprovante por WhatsApp</span>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" onClick={resetForm} className="flex-1">
+              Nova Venda
             </Button>
-            
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={resetForm} className="flex-1">
-                Nova Venda
-              </Button>
-              <Button
-                variant="default"
-                onClick={() => {
-                  setSuccessOpen(false);
-                  navigate({ to: "/admin" });
-                }}
-                className="flex-1 bg-primary text-primary-foreground"
-              >
-                Ver Venda
-              </Button>
-            </div>
+            <Button
+              variant="default"
+              onClick={() => {
+                resetForm();
+                navigate({ to: "/admin" });
+              }}
+              className="flex-1 bg-primary text-primary-foreground"
+            >
+              Ver Venda
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
