@@ -33,7 +33,7 @@ export function isIOSSafari(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
   // iPhone / iPad / iPod running Safari (not Chrome on iOS)
-  return /iP(hone|ad|od)/i.test(ua);
+  return /iP(hone|ad|od)/i.test(ua) && !!ua.match(/Safari/) && !ua.match(/Chrome/);
 }
 
 function isSafariDesktop(): boolean {
@@ -502,9 +502,6 @@ export async function renderDrawVideo(
   data: DrawVideoData,
   onProgress?: RenderProgressCallback,
 ): Promise<RenderResult | null> {
-  // iOS Safari: no canvas.captureStream / MediaRecorder for video
-  if (isIOSSafari()) return null;
-
   const picked = pickRecordingMime();
   if (!picked) return null;
 
@@ -654,7 +651,6 @@ export async function shareOrDownload(blob: Blob, filename: string, title?: stri
 }
 
 export function isVideoSupported(): boolean {
-  if (isIOSSafari()) return false;
   if (typeof MediaRecorder === "undefined") return false;
   const c = document.createElement("canvas");
   if (typeof (c as any).captureStream !== "function") return false;

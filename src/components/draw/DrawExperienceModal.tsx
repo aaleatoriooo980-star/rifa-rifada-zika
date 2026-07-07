@@ -69,14 +69,13 @@ export function DrawExperienceModal({
   const [muted, setMutedLocal] = useState(isMuted());
 
   // Video / image generation state
-  const onIOS = isIOSSafari();
   const [videoState, setVideoState] = useState<VideoState>("idle");
   const [videoPct, setVideoPct] = useState(0);
   const [videoLabel, setVideoLabel] = useState("");
   const videoBlob = useRef<Blob | null>(null);
   const videoFilename = useRef<string>("");
   const videoFormat = useRef<"mp4" | "webm" | "png">("mp4");
-  const canGenVideo = isVideoSupported(); // false on iOS, true on Chrome/Android/Desktop
+  const canGenVideo = isVideoSupported(); // True on iOS Safari (14.5+) and modern Chrome/Android/Desktop
 
   const shareRef = useRef<HTMLDivElement>(null);
 
@@ -109,7 +108,7 @@ export function DrawExperienceModal({
       }
       setDraw(d);
 
-      // ── Start rendering in parallel (video or PNG) ────────────────────────
+      // ── Start rendering in parallel ────────────────────────────────────────
       const videoData: DrawVideoData = {
         rifaTitle: rifa.title,
         rifaImage: rifa.image,
@@ -120,35 +119,7 @@ export function DrawExperienceModal({
         winnerName: d.winnerName ?? "Vencedor",
       };
 
-      if (onIOS) {
-        // iOS Safari: generate a premium PNG result image
-        setVideoState("rendering");
-        setVideoPct(10);
-        setVideoLabel("Gerando imagem do resultado…");
-        generateResultPng(videoData)
-          .then((result) => {
-            videoBlob.current = result.blob;
-            videoFilename.current = result.filename;
-            videoFormat.current = "png";
-            setVideoState("done");
-            setVideoPct(100);
-            const videoMeta: DrawVideo = {
-              id: `v-${Date.now()}`,
-              rifaId: rifa.id,
-              drawId: d.id,
-              filename: result.filename,
-              sizeBytes: result.blob.size,
-              createdAt: new Date().toISOString(),
-              format: "png",
-            };
-            saveDrawVideo(rifa.id, videoMeta);
-            toast.success("Imagem do sorteio gerada! 📸");
-          })
-          .catch(() => {
-            setVideoState("failed");
-          });
-      } else if (canGenVideo) {
-        // Chrome / Firefox / Android: generate MP4 video
+      if (canGenVideo) {
         setVideoState("rendering");
         setVideoPct(0);
         setVideoLabel("Preparando…");
@@ -157,7 +128,11 @@ export function DrawExperienceModal({
           setVideoLabel(label);
         })
           .then((result) => {
-            if (!result) { setVideoState("failed"); return; }
+            if (!result) {
+              // Video generation failed or returned null (e.g. strict Safari error) -> fallback to PNG
+              fallbackToPng(videoData, d);
+              return;
+            }
             videoBlob.current = result.blob;
             videoFilename.current = result.filename;
             videoFormat.current = result.format as "mp4" | "webm" | "png";
@@ -170,16 +145,17 @@ export function DrawExperienceModal({
               filename: result.filename,
               sizeBytes: result.blob.size,
               createdAt: new Date().toISOString(),
-              format: result.format as "mp4" | "png",
+              format: result.format === "png" ? "png" : "mp4",
             };
             saveDrawVideo(rifa.id, videoMeta);
             const label = result.format === "mp4" ? "Vídeo gerado com sucesso! 🎬" : "Arquivo gerado com sucesso!";
             toast.success(label);
           })
           .catch(() => {
-            setVideoState("failed");
-            toast.error("Não foi possível gerar o vídeo. Baixe a imagem do resultado.");
+            fallbackToPng(videoData, d);
           });
+      } else {
+        fallbackToPng(videoData, d);
       }
 
       // ── Spin animation ────────────────────────────────────────────────────
@@ -228,6 +204,35 @@ export function DrawExperienceModal({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  const fallbackToPng = (videoData: DrawVideoData, d: Draw) => {
+    setVideoState("rendering");
+    setVideoPct(20);
+    setVideoLabel("Gerando imagem do resultado…");
+    generateResultPng(videoData)
+      .then((result) => {
+        videoBlob.current = result.blob;
+        videoFilename.current = result.filename;
+        videoFormat.current = "png";
+        setVideoState("done");
+        setVideoPct(100);
+        const videoMeta: DrawVideo = {
+          id: `v-${Date.now()}`,
+          rifaId: rifa.id,
+          drawId: d.id,
+          filename: result.filename,
+          sizeBytes: result.blob.size,
+          createdAt: new Date().toISOString(),
+          format: "png",
+        };
+        saveDrawVideo(rifa.id, videoMeta);
+        toast.success("Imagem do sorteio gerada! 📸");
+      })
+      .catch(() => {
+        setVideoState("failed");
+        toast.error("Não foi possível gerar a imagem ou o vídeo.");
+      });
+  };
 
   const toggleMute = () => {
     const v = !muted;
