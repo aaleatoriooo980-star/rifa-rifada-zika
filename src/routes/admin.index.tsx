@@ -18,6 +18,8 @@ import {
   DollarSign,
   ShoppingBag,
   CalendarClock,
+  Store,
+  Globe,
 } from "lucide-react";
 import {
   BarChart,
@@ -29,6 +31,7 @@ import {
   LineChart,
   Line,
   CartesianGrid,
+  Legend,
 } from "recharts";
 
 export const Route = createFileRoute("/admin/")({
@@ -62,10 +65,31 @@ function Dashboard() {
     .filter((o) => o.status === "pago")
     .reduce((s, o) => s + o.total, 0);
 
+  const receitaBalcao = orders
+    .filter((o) => o.status === "pago" && o.origin === "balcao")
+    .reduce((s, o) => s + o.total, 0);
+
+  const receitaOnline = orders
+    .filter((o) => o.status === "pago" && (o.origin === "online" || !o.origin))
+    .reduce((s, o) => s + o.total, 0);
+
   const vendasPorRifa = visible.map((r) => ({
     name: r.title.split(" ").slice(0, 2).join(" "),
     vendidos: numbers.filter((n) => n.rifaId === r.id && n.status === "vendido").length,
   }));
+
+  const receitaComparativa = visible.map((r) => {
+    const rifaOrders = orders.filter((o) => o.rifaId === r.id && o.status === "pago");
+    return {
+      name: r.title.split(" ").slice(0, 2).join(" "),
+      Balcão: rifaOrders
+        .filter((o) => o.origin === "balcao")
+        .reduce((s, o) => s + o.total, 0),
+      Online: rifaOrders
+        .filter((o) => o.origin === "online" || !o.origin)
+        .reduce((s, o) => s + o.total, 0),
+    };
+  }).filter((d) => d.Balcão > 0 || d.Online > 0);
 
   const arrecadacaoMensal = [
     { mes: "Jan", valor: 1200 },
@@ -115,6 +139,21 @@ function Dashboard() {
         />
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-2">
+        <StatCard
+          icon={Store}
+          label="Receita Balcão"
+          value={formatBRL(receitaBalcao)}
+          tone="success"
+        />
+        <StatCard
+          icon={Globe}
+          label="Receita Online"
+          value={formatBRL(receitaOnline)}
+          tone="primary"
+        />
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="shadow-soft">
           <CardContent className="p-5">
@@ -142,29 +181,32 @@ function Dashboard() {
 
         <Card className="shadow-soft">
           <CardContent className="p-5">
-            <h3 className="font-display font-semibold">Arrecadação mensal</h3>
-            <p className="mb-4 text-xs text-muted-foreground">Últimos 6 meses (R$)</p>
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={arrecadacaoMensal}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="mes" stroke="var(--muted-foreground)" fontSize={12} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="valor"
-                  stroke="var(--primary)"
-                  strokeWidth={3}
-                  dot={{ fill: "var(--primary)", r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <h3 className="font-display font-semibold">Balcão vs Online por rifa</h3>
+            <p className="mb-4 text-xs text-muted-foreground">Receita por canal de venda (R$)</p>
+            {receitaComparativa.length === 0 ? (
+              <div className="flex h-60 items-center justify-center text-sm text-muted-foreground">
+                Nenhuma venda registrada ainda.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={receitaComparativa} barCategoryGap="30%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={12} />
+                  <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(v) => `R$${v}`} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "8px",
+                    }}
+                    formatter={(value: number) => [`R$ ${value.toFixed(2)}`, undefined]}
+                  />
+                  <Legend />
+                  <Bar dataKey="Balcão" fill="#22c55e" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="Online" fill="var(--primary)" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
