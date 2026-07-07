@@ -10,7 +10,7 @@ export const mockRifas: Rifa[] = [
     id: "r-iphone",
     title: "iPhone 17 Pro Max 512GB",
     description:
-      "Concorra ao novíssimo iPhone 17 Pro Max 512GB lacrado, com 1 ano de garantia Apple. Sorteio pela Loteria Federal.",
+      "Concorra ao novíssimo iPhone 187 Pro Max 512GB lacrado, com 1 ano de garantia Apple. Sorteio pela Loteria Federal.",
     prize: "iPhone 17 Pro Max",
     pricePerNumber: 5,
     totalNumbers: 100,
