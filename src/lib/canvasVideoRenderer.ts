@@ -1,14 +1,12 @@
 /**
- * canvasVideoRenderer.ts
+ * canvasVideoRenderer.ts  (v2)
  *
- * Generates a lottery-draw MP4 video entirely client-side:
- *  1. Draws each animation frame onto an offscreen 1080×1920 canvas
- *  2. Captures the canvas stream with MediaRecorder (WebM)
- *  3. Converts WebM → MP4 H.264 via FFmpeg.wasm (already installed)
+ * Strategy:
+ *  1. Try native MP4 MediaRecorder first (Chrome 94+ Desktop/Android) → no FFmpeg needed
+ *  2. Fall back to WebM + FFmpeg.wasm conversion
+ *  3. iOS Safari → generate a premium 1080×1920 PNG instead (no video API)
  *
- * Does NOT use getDisplayMedia or screen capture at all.
- * Compatible: Chrome/Firefox Desktop, Chrome Android, Safari macOS (14+)
- * Fallback:   Safari iOS → caller receives null blob → use PNG fallback
+ * No getDisplayMedia / screen capture used anywhere.
  */
 
 export interface DrawVideoData {
@@ -24,34 +22,62 @@ export interface DrawVideoData {
 export interface RenderResult {
   blob: Blob;
   filename: string;
-  mimeType: "video/mp4";
-  format: "mp4";
+  mimeType: string;
+  format: "mp4" | "webm" | "png";
 }
 
 export type RenderProgressCallback = (pct: number, label: string) => void;
 
-// ─── Safari / iOS detection ───────────────────────────────────────────────────
-function isSafariIOS(): boolean {
+// ─── Device detection ─────────────────────────────────────────────────────────
+export function isIOSSafari(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
-  return /iP(hone|ad|od)/i.test(ua) || (!!ua.match(/Safari/) && !ua.match(/Chrome/));
+  // iPhone / iPad / iPod running Safari (not Chrome on iOS)
+  return /iP(hone|ad|od)/i.test(ua);
 }
 
-// ─── MIME detection ──────────────────────────────────────────────────────────
-function pickWebmMime(): string | null {
-  const candidates = [
+function isSafariDesktop(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  return !!ua.match(/Safari/) && !ua.match(/Chrome/) && !ua.match(/iP(hone|ad|od)/i);
+}
+
+// ─── MIME detection — try native MP4 first ────────────────────────────────────
+interface PickedMime {
+  mime: string;
+  isNativeMp4: boolean;
+}
+
+function pickRecordingMime(): PickedMime | null {
+  if (typeof MediaRecorder === "undefined") return null;
+
+  // Native MP4 — Chrome 94+ desktop and some Android versions
+  const mp4Candidates = [
+    "video/mp4;codecs=h264,aac",
+    "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+    "video/mp4",
+  ];
+  for (const m of mp4Candidates) {
+    if (MediaRecorder.isTypeSupported(m)) {
+      return { mime: m, isNativeMp4: true };
+    }
+  }
+
+  // WebM fallback (requires FFmpeg conversion)
+  const webmCandidates = [
     "video/webm;codecs=vp9,opus",
     "video/webm;codecs=vp8,opus",
     "video/webm",
   ];
-  if (typeof MediaRecorder === "undefined") return null;
-  for (const m of candidates) {
-    if (MediaRecorder.isTypeSupported(m)) return m;
+  for (const m of webmCandidates) {
+    if (MediaRecorder.isTypeSupported(m)) {
+      return { mime: m, isNativeMp4: false };
+    }
   }
   return null;
 }
 
-// ─── Colour constants ────────────────────────────────────────────────────────
+// ─── Colour constants ─────────────────────────────────────────────────────────
 const BG_TOP = "#0a1628";
 const BG_BOT = "#1a2f5a";
 const GOLD = "#f59e0b";
@@ -65,7 +91,7 @@ const W = 1080;
 const H = 1920;
 const FPS = 30;
 
-// ─── Drawing helpers ─────────────────────────────────────────────────────────
+// ─── Drawing helpers ──────────────────────────────────────────────────────────
 function drawBackground(ctx: CanvasRenderingContext2D) {
   const g = ctx.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, BG_TOP);
@@ -78,8 +104,8 @@ function drawFloatingParticles(ctx: CanvasRenderingContext2D, t: number) {
   ctx.save();
   for (let i = 0; i < 30; i++) {
     const seed = i * 137.5;
-    const x = ((seed * 31) % W);
-    const y = ((seed * 17 + t * 60) % H);
+    const x = (seed * 31) % W;
+    const y = (seed * 17 + t * 60) % H;
     const r = 2 + (seed % 4);
     const alpha = 0.08 + 0.08 * Math.sin(t * 2 + seed);
     ctx.beginPath();
@@ -93,7 +119,6 @@ function drawFloatingParticles(ctx: CanvasRenderingContext2D, t: number) {
 function drawLogo(ctx: CanvasRenderingContext2D, alpha: number, cy: number = H / 2) {
   ctx.save();
   ctx.globalAlpha = alpha;
-  // Ticket icon circle
   const iconR = 80;
   ctx.beginPath();
   ctx.arc(W / 2, cy - 80, iconR, 0, Math.PI * 2);
@@ -102,16 +127,14 @@ function drawLogo(ctx: CanvasRenderingContext2D, alpha: number, cy: number = H /
   ctx.strokeStyle = WHITE20;
   ctx.lineWidth = 3;
   ctx.stroke();
-  // 🎟 text
   ctx.font = "bold 72px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+  ctx.fillStyle = WHITE;
   ctx.fillText("🎟", W / 2, cy - 80);
-  // Platform name
   ctx.font = "bold 56px system-ui, sans-serif";
   ctx.fillStyle = WHITE;
   ctx.fillText("RifasOnline", W / 2, cy + 60);
-  // Tagline
   ctx.font = "36px system-ui, sans-serif";
   ctx.fillStyle = WHITE70;
   ctx.fillText("Plataforma de Rifas", W / 2, cy + 130);
@@ -121,7 +144,7 @@ function drawLogo(ctx: CanvasRenderingContext2D, alpha: number, cy: number = H /
 function drawRifaInfo(
   ctx: CanvasRenderingContext2D,
   data: DrawVideoData,
-  slideY: number, // 0=fully visible, positive=sliding up from bottom
+  slideY: number,
   alpha: number,
   rifaImg: HTMLImageElement | null,
 ) {
@@ -130,7 +153,6 @@ function drawRifaInfo(
   const cx = W / 2;
   const baseY = H / 2 + slideY;
 
-  // Rifa image
   if (rifaImg) {
     const imgSize = 340;
     ctx.save();
@@ -139,14 +161,12 @@ function drawRifaInfo(
     ctx.clip();
     ctx.drawImage(rifaImg, cx - imgSize / 2, baseY - 520, imgSize, imgSize);
     ctx.restore();
-    // border
     ctx.beginPath();
     ctx.roundRect(cx - imgSize / 2, baseY - 520, imgSize, imgSize, 24);
     ctx.strokeStyle = WHITE20;
     ctx.lineWidth = 3;
     ctx.stroke();
   } else {
-    // placeholder
     ctx.beginPath();
     ctx.roundRect(cx - 170, baseY - 520, 340, 340, 24);
     ctx.fillStyle = WHITE10;
@@ -157,23 +177,17 @@ function drawRifaInfo(
     ctx.fillText("🎟", cx, baseY - 350);
   }
 
-  // Title
   ctx.font = "bold 64px system-ui, sans-serif";
   ctx.fillStyle = WHITE;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   wrapText(ctx, data.rifaTitle, cx, baseY - 120, 900, 80);
-
-  // Prize badge
   ctx.font = "bold 44px system-ui, sans-serif";
   ctx.fillStyle = GOLD;
   ctx.fillText("🏆 " + data.prize, cx, baseY + 60);
-
-  // Date
   ctx.font = "38px system-ui, sans-serif";
   ctx.fillStyle = WHITE70;
   ctx.fillText("Sorteio: " + data.drawDate, cx, baseY + 140);
-
   ctx.restore();
 }
 
@@ -203,51 +217,30 @@ function wrapText(
   if (line && lineCount < maxLines) ctx.fillText(line, x, y + lineCount * lineHeight);
 }
 
-function drawCountdown(
-  ctx: CanvasRenderingContext2D,
-  digit: string,
-  scale: number,
-  alpha: number,
-) {
+function drawCountdown(ctx: CanvasRenderingContext2D, digit: string, scale: number, alpha: number) {
   ctx.save();
   ctx.globalAlpha = alpha;
-  const cx = W / 2;
-  const cy = H / 2;
-
-  // Glow
   ctx.shadowColor = WHITE;
   ctx.shadowBlur = 60 * scale;
-
-  // Digit
   const fontSize = Math.round(460 * scale);
   ctx.font = `900 ${fontSize}px system-ui, sans-serif`;
   ctx.fillStyle = WHITE;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(digit, cx, cy);
-
+  ctx.fillText(digit, W / 2, H / 2);
   ctx.restore();
 }
 
-function drawSpinReel(
-  ctx: CanvasRenderingContext2D,
-  value: number,
-  blur: number,
-  alpha: number,
-) {
+function drawSpinReel(ctx: CanvasRenderingContext2D, value: number, blur: number, alpha: number) {
   ctx.save();
   ctx.globalAlpha = alpha;
   const cx = W / 2;
   const cy = H / 2;
-
-  // Label
   ctx.font = "bold 40px system-ui, sans-serif";
   ctx.fillStyle = WHITE70;
   ctx.textAlign = "center";
   ctx.textBaseline = "bottom";
   ctx.fillText("Escolhendo o número vencedor…", cx, cy - 220);
-
-  // Reel box
   const boxW = 700;
   const boxH = 300;
   ctx.beginPath();
@@ -257,11 +250,7 @@ function drawSpinReel(
   ctx.strokeStyle = WHITE20;
   ctx.lineWidth = 3;
   ctx.stroke();
-
-  // Number with blur effect
-  if (blur > 0) {
-    ctx.filter = `blur(${blur}px)`;
-  }
+  if (blur > 0) ctx.filter = `blur(${blur}px)`;
   ctx.font = `900 200px system-ui, sans-serif`;
   ctx.fillStyle = WHITE;
   ctx.textAlign = "center";
@@ -269,19 +258,12 @@ function drawSpinReel(
   ctx.shadowColor = GREEN;
   ctx.shadowBlur = 20;
   ctx.fillText(String(value).padStart(3, "0"), cx, cy);
-
   ctx.restore();
 }
 
 interface ConfettiParticle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  color: string;
-  size: number;
-  rot: number;
-  rotSpeed: number;
+  x: number; y: number; vx: number; vy: number;
+  color: string; size: number; rot: number; rotSpeed: number;
 }
 
 function makeConfetti(): ConfettiParticle[] {
@@ -302,7 +284,7 @@ function stepConfetti(particles: ConfettiParticle[], dt: number) {
   for (const p of particles) {
     p.x += p.vx * dt * FPS;
     p.y += p.vy * dt * FPS;
-    p.vy += 0.3 * dt * FPS; // gravity
+    p.vy += 0.3 * dt * FPS;
     p.rot += p.rotSpeed * dt * FPS;
   }
 }
@@ -331,19 +313,15 @@ function drawWinner(
   ctx.save();
   ctx.globalAlpha = alpha;
   const cx = W / 2;
-
   drawConfetti(ctx, confettiParticles);
-
-  // Trophy
   ctx.save();
   ctx.translate(cx, 480);
   ctx.scale(scale, scale);
-  const tR = 120;
-  const tGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, tR);
+  const tGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 120);
   tGrad.addColorStop(0, "#fde68a");
   tGrad.addColorStop(1, "#d97706");
   ctx.beginPath();
-  ctx.arc(0, 0, tR, 0, Math.PI * 2);
+  ctx.arc(0, 0, 120, 0, Math.PI * 2);
   ctx.fillStyle = tGrad;
   ctx.shadowColor = GOLD;
   ctx.shadowBlur = 40;
@@ -354,23 +332,14 @@ function drawWinner(
   ctx.shadowBlur = 0;
   ctx.fillText("🏆", 0, 0);
   ctx.restore();
-
-  // PARABÉNS
   ctx.font = "bold 56px system-ui, sans-serif";
   ctx.fillStyle = WHITE70;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  ctx.letterSpacing = "8px";
   ctx.fillText("🎉 PARABÉNS!", cx, 680);
-  ctx.letterSpacing = "0px";
-
-  // Winner name
   ctx.font = `900 ${Math.min(110, Math.round(W * 0.09))}px system-ui, sans-serif`;
   ctx.fillStyle = WHITE;
-  ctx.textBaseline = "top";
   wrapText(ctx, data.winnerName || "Vencedor", cx, 800, 900, 130, 2);
-
-  // Number box
   ctx.beginPath();
   ctx.roundRect(cx - 350, 1080, 700, 280, 32);
   ctx.fillStyle = WHITE10;
@@ -378,12 +347,10 @@ function drawWinner(
   ctx.strokeStyle = GOLD;
   ctx.lineWidth = 4;
   ctx.stroke();
-
   ctx.font = "bold 44px system-ui, sans-serif";
   ctx.fillStyle = WHITE70;
   ctx.textBaseline = "top";
   ctx.fillText("Número Vencedor", cx, 1110);
-
   ctx.font = `900 180px system-ui, sans-serif`;
   ctx.fillStyle = GOLD;
   ctx.shadowColor = GOLD;
@@ -391,131 +358,210 @@ function drawWinner(
   ctx.textBaseline = "top";
   ctx.fillText(String(data.winnerNumber).padStart(3, "0"), cx, 1180);
   ctx.shadowBlur = 0;
-
-  // Prize
   ctx.font = "bold 52px system-ui, sans-serif";
   ctx.fillStyle = GREEN;
   ctx.textBaseline = "top";
   ctx.fillText("🏆 " + data.prize, cx, 1440);
-
-  // Date
   ctx.font = "40px system-ui, sans-serif";
   ctx.fillStyle = WHITE70;
   ctx.fillText("Sorteado em " + data.drawDate, cx, 1530);
-
   ctx.restore();
 }
 
-// ─── Animation timeline ───────────────────────────────────────────────────────
-// Total duration in seconds
-const TIMELINE = {
-  logoIn: { start: 0, end: 1.5 },         // logo fade-in
-  logoHold: { start: 1.5, end: 2.5 },     // logo hold
-  rifaInfo: { start: 2.5, end: 5.0 },     // rifa info slide-up
-  count3: { start: 5.0, end: 6.0 },
-  count2: { start: 6.0, end: 7.0 },
-  count1: { start: 7.0, end: 8.0 },
-  spin: { start: 8.0, end: 13.0 },        // 5 seconds spin
-  winner: { start: 13.0, end: 14.5 },     // winner reveal
-  winnerHold: { start: 14.5, end: 17.0 }, // hold winner
-  outroLogo: { start: 17.0, end: 19.0 },  // fade to logo
+// ─── Timeline ─────────────────────────────────────────────────────────────────
+const TL = {
+  logoIn:    { s: 0,    e: 1.5 },
+  logoHold:  { s: 1.5,  e: 2.5 },
+  rifaInfo:  { s: 2.5,  e: 5.0 },
+  count3:    { s: 5.0,  e: 6.0 },
+  count2:    { s: 6.0,  e: 7.0 },
+  count1:    { s: 7.0,  e: 8.0 },
+  spin:      { s: 8.0,  e: 13.0 },
+  winner:    { s: 13.0, e: 14.5 },
+  winnerHold:{ s: 14.5, e: 17.0 },
+  outroLogo: { s: 17.0, e: 19.0 },
   total: 19.0,
 };
 
-function easeOut(t: number, p = 3): number {
-  return 1 - Math.pow(1 - t, p);
-}
+function eo(t: number, p = 3) { return 1 - Math.pow(1 - t, p); }
+function c01(v: number)        { return Math.max(0, Math.min(1, v)); }
+function pIn(t: number, s: number, e: number) { return c01((t - s) / (e - s)); }
 
-function clamp01(v: number): number {
-  return Math.max(0, Math.min(1, v));
-}
-
-function progressIn(t: number, start: number, end: number): number {
-  return clamp01((t - start) / (end - start));
-}
-
-// ─── Public API ───────────────────────────────────────────────────────────────
-
-export interface DrawVideoRenderer {
-  /** Promise resolves with MP4 blob (or null on unsupported/iOS) */
-  result: Promise<RenderResult | null>;
-  /** 0–100 */
-  getProgress(): number;
-  /** Abort cleanly */
-  cancel(): void;
-}
-
-export async function renderDrawVideo(
+// ─── Core frame renderer (shared by video AND PNG paths) ──────────────────────
+function renderFrameAt(
+  ctx: CanvasRenderingContext2D,
+  t: number,
+  dt: number,
   data: DrawVideoData,
-  onProgress?: RenderProgressCallback,
-): Promise<RenderResult | null> {
-  // Safari iOS doesn't reliably support canvas.captureStream + MediaRecorder
-  if (isSafariIOS()) return null;
+  rifaImg: HTMLImageElement | null,
+  confettiParticles: ConfettiParticle[],
+) {
+  drawBackground(ctx);
+  drawFloatingParticles(ctx, t);
 
-  const mime = pickWebmMime();
-  if (!mime) return null;
+  // Logo intro
+  if (t < TL.logoHold.e) {
+    const alpha = t < TL.logoIn.e ? eo(pIn(t, TL.logoIn.s, TL.logoIn.e)) : 1;
+    drawLogo(ctx, alpha, H / 2 - 100);
+  }
+  // Rifa info
+  if (t >= TL.rifaInfo.s && t < TL.count3.s) {
+    const p = pIn(t, TL.rifaInfo.s, TL.rifaInfo.e);
+    drawRifaInfo(ctx, data, -H * 0.35 + (1 - eo(p)) * 200, eo(p), rifaImg);
+  }
+  if (t >= TL.rifaInfo.e && t < TL.spin.s) {
+    drawRifaInfo(ctx, data, -H * 0.35, 0.4, rifaImg);
+  }
+  // Countdowns
+  if (t >= TL.count3.s && t < TL.count2.s) {
+    const p = pIn(t, TL.count3.s, TL.count2.s);
+    drawCountdown(ctx, "3", 0.5 + eo(p) * 0.5, p < 0.8 ? 1 : 1 - (p - 0.8) / 0.2);
+  }
+  if (t >= TL.count2.s && t < TL.count1.s) {
+    const p = pIn(t, TL.count2.s, TL.count1.s);
+    drawCountdown(ctx, "2", 0.5 + eo(p) * 0.5, p < 0.8 ? 1 : 1 - (p - 0.8) / 0.2);
+  }
+  if (t >= TL.count1.s && t < TL.spin.s) {
+    const p = pIn(t, TL.count1.s, TL.spin.s);
+    drawCountdown(ctx, "1", 0.5 + eo(p) * 0.5, p < 0.8 ? 1 : 1 - (p - 0.8) / 0.2);
+  }
+  // Spin
+  if (t >= TL.spin.s && t < TL.winner.s) {
+    const spinT = pIn(t, TL.spin.s, TL.spin.e);
+    const eased = eo(spinT, 3);
+    const idx = Math.floor((t * 31 * (1 - eased * 0.9)) % data.participantNumbers.length);
+    const displayed = spinT < 1
+      ? data.participantNumbers[Math.abs(idx) % data.participantNumbers.length]
+      : data.winnerNumber;
+    const blur = spinT < 0.8 ? (1 - spinT) * 8 : 0;
+    drawSpinReel(ctx, displayed ?? data.winnerNumber, blur, 1);
+  }
+  // Winner
+  if (t >= TL.winner.s) {
+    const p = pIn(t, TL.winner.s, TL.winnerHold.s);
+    stepConfetti(confettiParticles, dt);
+    drawWinner(ctx, data, 0.7 + eo(p) * 0.3, eo(p), confettiParticles);
+  }
+  // Outro
+  if (t >= TL.outroLogo.s) {
+    const p = pIn(t, TL.outroLogo.s, TL.outroLogo.e);
+    drawLogo(ctx, eo(p) * 0.9, H / 2);
+    ctx.save();
+    ctx.fillStyle = `rgba(10,22,40,${eo(p) * 0.5})`;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+}
 
-  // Create offscreen canvas
+// ─── iOS / unsupported: generate premium PNG of winner frame ──────────────────
+export async function generateResultPng(data: DrawVideoData): Promise<RenderResult> {
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
 
-  // Load rifa image
   let rifaImg: HTMLImageElement | null = null;
   if (data.rifaImage) {
-    try {
-      rifaImg = await loadImage(data.rifaImage);
-    } catch {
-      rifaImg = null;
-    }
+    try { rifaImg = await loadImage(data.rifaImage); } catch {}
   }
 
-  // Prepare confetti particles (created once, stepped each frame)
-  const confettiParticles = makeConfetti();
-  let confettiStarted = false;
+  // Draw the winner-hold frame (t = winnerHold midpoint)
+  const confetti = makeConfetti();
+  // Advance confetti visually (pretend 2s have passed)
+  for (let i = 0; i < 60; i++) stepConfetti(confetti, 1 / FPS);
 
-  // MediaRecorder setup
+  drawBackground(ctx);
+  drawFloatingParticles(ctx, TL.winner.s + 1);
+  drawWinner(ctx, data, 1, 1, confetti);
+
+  // Footer logo
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.font = "bold 38px system-ui, sans-serif";
+  ctx.fillStyle = WHITE70;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("RifasOnline · Plataforma de Rifas", W / 2, H - 40);
+  ctx.restore();
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      const ts = new Date().toISOString().replace(/[:.]/g, "-");
+      resolve({
+        blob: blob!,
+        filename: `sorteio-${ts}.png`,
+        mimeType: "image/png",
+        format: "png",
+      });
+    }, "image/png");
+  });
+}
+
+// ─── Video: canvas stream → MediaRecorder ────────────────────────────────────
+export async function renderDrawVideo(
+  data: DrawVideoData,
+  onProgress?: RenderProgressCallback,
+): Promise<RenderResult | null> {
+  // iOS Safari: no canvas.captureStream / MediaRecorder for video
+  if (isIOSSafari()) return null;
+
+  const picked = pickRecordingMime();
+  if (!picked) return null;
+
+  // Check canvas.captureStream availability (Safari desktop < 14)
+  const testCanvas = document.createElement("canvas");
+  if (typeof (testCanvas as any).captureStream !== "function") return null;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d")!;
+
+  let rifaImg: HTMLImageElement | null = null;
+  if (data.rifaImage) {
+    try { rifaImg = await loadImage(data.rifaImage); } catch {}
+  }
+
+  const confettiParticles = makeConfetti();
   const stream = (canvas as any).captureStream(FPS) as MediaStream;
-  const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
+  const recorder = new MediaRecorder(stream, {
+    mimeType: picked.mime,
+    videoBitsPerSecond: 8_000_000,
+  });
   const chunks: Blob[] = [];
   recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
 
+  const totalFrames = Math.ceil(TL.total * FPS);
+
   return new Promise<RenderResult | null>((resolve) => {
     recorder.onstop = async () => {
-      // Phase 2: FFmpeg conversion (0→100 inside this phase = overall 50→100)
-      onProgress?.(50, "Convertendo para MP4…");
+      const rawBlob = new Blob(chunks, { type: picked.mime });
+      const ts = new Date().toISOString().replace(/[:.]/g, "-");
+
+      // If native MP4: no conversion needed
+      if (picked.isNativeMp4) {
+        onProgress?.(100, "Pronto!");
+        resolve({ blob: rawBlob, filename: `sorteio-${ts}.mp4`, mimeType: "video/mp4", format: "mp4" });
+        return;
+      }
+
+      // WebM → try FFmpeg conversion
+      onProgress?.(52, "Convertendo para MP4…");
       try {
-        const webmBlob = new Blob(chunks, { type: mime });
-        const mp4Blob = await convertToMp4(webmBlob, (ffPct) => {
-          onProgress?.(50 + Math.round(ffPct * 50), "Convertendo para MP4…");
+        const mp4Blob = await convertToMp4(rawBlob, (ffPct) => {
+          onProgress?.(52 + Math.round(ffPct * 46), "Convertendo para MP4…");
         });
-        const ts = new Date().toISOString().replace(/[:.]/g, "-");
         onProgress?.(100, "Pronto!");
-        resolve({
-          blob: mp4Blob,
-          filename: `sorteio-${ts}.mp4`,
-          mimeType: "video/mp4",
-          format: "mp4",
-        });
+        resolve({ blob: mp4Blob, filename: `sorteio-${ts}.mp4`, mimeType: "video/mp4", format: "mp4" });
       } catch {
-        // FFmpeg failed → deliver WebM renamed
-        const webmBlob = new Blob(chunks, { type: mime });
-        const ts = new Date().toISOString().replace(/[:.]/g, "-");
-        onProgress?.(100, "Pronto!");
-        resolve({
-          blob: webmBlob,
-          filename: `sorteio-${ts}.webm`,
-          mimeType: "video/mp4", // white lie for download purposes
-          format: "mp4",
-        });
+        // FFmpeg failed (likely no SharedArrayBuffer) — deliver WebM
+        onProgress?.(100, "Pronto! (formato WebM)");
+        resolve({ blob: rawBlob, filename: `sorteio-${ts}.webm`, mimeType: "video/webm", format: "webm" });
       }
     };
 
-    recorder.start(100); // 100ms timeslices
+    recorder.start(200);
 
-    // Render loop
-    const totalFrames = Math.ceil(TIMELINE.total * FPS);
     let frame = 0;
     let lastTime: number | null = null;
     let animFrameId = 0;
@@ -524,102 +570,13 @@ export async function renderDrawVideo(
       if (lastTime === null) lastTime = now;
       const dt = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
-
       const t = frame / FPS;
       frame++;
 
-      // ── Phase 1: drawing (overall 0→50%)
       const drawPct = Math.round((frame / totalFrames) * 50);
-      onProgress?.(Math.min(drawPct, 49), "Desenhando animação…");
+      onProgress?.(Math.min(drawPct, 50), "Desenhando animação…");
 
-      // Clear
-      drawBackground(ctx);
-      drawFloatingParticles(ctx, t);
-
-      // ── Logo intro ──────────────────────────────
-      if (t < TIMELINE.logoHold.end) {
-        const alpha =
-          t < TIMELINE.logoIn.end
-            ? easeOut(progressIn(t, TIMELINE.logoIn.start, TIMELINE.logoIn.end))
-            : 1;
-        drawLogo(ctx, alpha, H / 2 - 100);
-      }
-
-      // ── Rifa info ───────────────────────────────
-      if (t >= TIMELINE.rifaInfo.start && t < TIMELINE.count3.start) {
-        const p = progressIn(t, TIMELINE.rifaInfo.start, TIMELINE.rifaInfo.end);
-        const slideY = (1 - easeOut(p)) * 200;
-        drawRifaInfo(ctx, data, -H * 0.35 + slideY, easeOut(p), rifaImg);
-      }
-      // Keep info while counting
-      if (t >= TIMELINE.rifaInfo.end && t < TIMELINE.spin.start) {
-        drawRifaInfo(ctx, data, -H * 0.35, 0.4, rifaImg);
-      }
-
-      // ── Countdown 3 ─────────────────────────────
-      if (t >= TIMELINE.count3.start && t < TIMELINE.count2.start) {
-        const p = progressIn(t, TIMELINE.count3.start, TIMELINE.count2.start);
-        const scale = 0.5 + easeOut(p) * 0.5;
-        const alpha = p < 0.8 ? 1 : 1 - (p - 0.8) / 0.2;
-        drawCountdown(ctx, "3", scale, alpha);
-      }
-
-      // ── Countdown 2 ─────────────────────────────
-      if (t >= TIMELINE.count2.start && t < TIMELINE.count1.start) {
-        const p = progressIn(t, TIMELINE.count2.start, TIMELINE.count1.start);
-        const scale = 0.5 + easeOut(p) * 0.5;
-        const alpha = p < 0.8 ? 1 : 1 - (p - 0.8) / 0.2;
-        drawCountdown(ctx, "2", scale, alpha);
-      }
-
-      // ── Countdown 1 ─────────────────────────────
-      if (t >= TIMELINE.count1.start && t < TIMELINE.spin.start) {
-        const p = progressIn(t, TIMELINE.count1.start, TIMELINE.spin.start);
-        const scale = 0.5 + easeOut(p) * 0.5;
-        const alpha = p < 0.8 ? 1 : 1 - (p - 0.8) / 0.2;
-        drawCountdown(ctx, "1", scale, alpha);
-      }
-
-      // ── Spin reel ────────────────────────────────
-      if (t >= TIMELINE.spin.start && t < TIMELINE.winner.start) {
-        const spinT = progressIn(t, TIMELINE.spin.start, TIMELINE.spin.end);
-        const eased = easeOut(spinT, 3);
-        // Display a pseudo-random number from participants (animate fast→slow)
-        const idx = Math.floor(
-          (t * 31 * (1 - eased * 0.9)) % data.participantNumbers.length,
-        );
-        const displayed =
-          spinT < 1
-            ? data.participantNumbers[Math.abs(idx) % data.participantNumbers.length]
-            : data.winnerNumber;
-        const blur = spinT < 0.8 ? (1 - spinT) * 8 : 0;
-        drawSpinReel(ctx, displayed ?? data.winnerNumber, blur, 1);
-      }
-
-      // ── Winner reveal ────────────────────────────
-      if (t >= TIMELINE.winner.start) {
-        const p = progressIn(t, TIMELINE.winner.start, TIMELINE.winnerHold.start);
-        const scale = 0.7 + easeOut(p) * 0.3;
-        const alpha = easeOut(p);
-
-        if (!confettiStarted) {
-          confettiStarted = true;
-        }
-        stepConfetti(confettiParticles, dt);
-        drawWinner(ctx, data, scale, alpha, confettiParticles);
-      }
-
-      // ── Outro logo ───────────────────────────────
-      if (t >= TIMELINE.outroLogo.start) {
-        const p = progressIn(t, TIMELINE.outroLogo.start, TIMELINE.outroLogo.end);
-        const alpha = easeOut(p);
-        drawLogo(ctx, alpha * 0.9, H / 2);
-        // Fade overlay
-        ctx.save();
-        ctx.fillStyle = `rgba(10,22,40,${easeOut(p) * 0.5})`;
-        ctx.fillRect(0, 0, W, H);
-        ctx.restore();
-      }
+      renderFrameAt(ctx, t, dt, data, rifaImg, confettiParticles);
 
       if (frame < totalFrames) {
         animFrameId = requestAnimationFrame(renderFrame);
@@ -633,7 +590,7 @@ export async function renderDrawVideo(
   });
 }
 
-// ─── FFmpeg conversion ────────────────────────────────────────────────────────
+// ─── FFmpeg WebM → MP4 ────────────────────────────────────────────────────────
 async function convertToMp4(input: Blob, onProgress?: (pct: number) => void): Promise<Blob> {
   const { FFmpeg } = await import("@ffmpeg/ffmpeg");
   const { fetchFile, toBlobURL } = await import("@ffmpeg/util");
@@ -643,6 +600,7 @@ async function convertToMp4(input: Blob, onProgress?: (pct: number) => void): Pr
     onProgress?.(Math.round(progress * 100));
   });
 
+  // Use the single-threaded core (no SharedArrayBuffer required)
   const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd";
   await ffmpeg.load({
     coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
@@ -650,19 +608,12 @@ async function convertToMp4(input: Blob, onProgress?: (pct: number) => void): Pr
   });
 
   await ffmpeg.writeFile("input.webm", await fetchFile(input));
-  await ffmpeg.exec([
-    "-i", "input.webm",
-    "-c:v", "libx264",
-    "-preset", "ultrafast",
-    "-pix_fmt", "yuv420p",
-    "-an",          // no audio track (canvas has no audio)
-    "output.mp4",
-  ]);
+  await ffmpeg.exec(["-i", "input.webm", "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-an", "output.mp4"]);
   const data = (await ffmpeg.readFile("output.mp4")) as Uint8Array;
   return new Blob([new Uint8Array(data)], { type: "video/mp4" });
 }
 
-// ─── Image loader helper ──────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -673,7 +624,6 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-// ─── Download helper (re-exported for convenience) ────────────────────────────
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -685,9 +635,28 @@ export function downloadBlob(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
+/** Try native share sheet (mobile). Falls back to download. */
+export async function shareOrDownload(blob: Blob, filename: string, title?: string) {
+  const file = new File([blob], filename, { type: blob.type });
+  if (
+    typeof navigator !== "undefined" &&
+    navigator.share &&
+    navigator.canShare({ files: [file] })
+  ) {
+    try {
+      await navigator.share({ files: [file], title: title ?? filename });
+      return;
+    } catch (e: any) {
+      if (e?.name === "AbortError") return; // user cancelled — don't download
+    }
+  }
+  downloadBlob(blob, filename);
+}
+
 export function isVideoSupported(): boolean {
-  if (isSafariIOS()) return false;
+  if (isIOSSafari()) return false;
   if (typeof MediaRecorder === "undefined") return false;
-  if (typeof (document.createElement("canvas") as any).captureStream !== "function") return false;
-  return pickWebmMime() !== null;
+  const c = document.createElement("canvas");
+  if (typeof (c as any).captureStream !== "function") return false;
+  return pickRecordingMime() !== null;
 }

@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatBRL } from "@/lib/format";
-import { Copy, Check, QrCode } from "lucide-react";
+import { Copy, Check, QrCode, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -60,15 +60,23 @@ export function PixModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="w-[95vw] max-h-[90vh] overflow-y-auto sm:max-w-md rounded-xl">
-        <DialogHeader>
+      <DialogContent className="w-[95vw] max-h-[90vh] p-0 sm:max-w-md rounded-xl overflow-hidden flex flex-col">
+        <DialogHeader className="p-5 pb-0 relative shrink-0">
           <DialogTitle>Finalizar pagamento</DialogTitle>
           <DialogDescription>
             Escaneie o QR code ou copie o código PIX para pagar.
           </DialogDescription>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onClose} 
+            className="absolute right-4 top-4 rounded-full h-8 w-8 text-muted-foreground hover:bg-muted"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
           <div className="rounded-xl border bg-muted/30 p-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Números</span>
@@ -163,7 +171,7 @@ export function PixModal({
           </Badge>
         </div>
 
-        <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2">
+        <DialogFooter className="p-5 border-t shrink-0 flex flex-col-reverse sm:flex-row gap-2">
           <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Cancelar
           </Button>

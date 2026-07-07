@@ -29,8 +29,11 @@ import type { Draw, DrawVideo, Rifa, RifaNumber } from "@/lib/types";
 import { toast } from "sonner";
 import {
   renderDrawVideo,
+  generateResultPng,
   downloadBlob,
+  shareOrDownload,
   isVideoSupported,
+  isIOSSafari,
   type DrawVideoData,
 } from "@/lib/canvasVideoRenderer";
 import { useRifas } from "@/context/RifasContext";
@@ -65,13 +68,15 @@ export function DrawExperienceModal({
   const [draw, setDraw] = useState<Draw | null>(null);
   const [muted, setMutedLocal] = useState(isMuted());
 
-  // Video generation state
+  // Video / image generation state
+  const onIOS = isIOSSafari();
   const [videoState, setVideoState] = useState<VideoState>("idle");
   const [videoPct, setVideoPct] = useState(0);
   const [videoLabel, setVideoLabel] = useState("");
   const videoBlob = useRef<Blob | null>(null);
   const videoFilename = useRef<string>("");
-  const canGenVideo = isVideoSupported();
+  const videoFormat = useRef<"mp4" | "webm" | "png">("mp4");
+  const canGenVideo = isVideoSupported(); // false on iOS, true on Chrome/Android/Desktop
 
   const shareRef = useRef<HTMLDivElement>(null);
 
@@ -86,6 +91,7 @@ export function DrawExperienceModal({
     setVideoPct(0);
     videoBlob.current = null;
     videoFilename.current = "";
+    videoFormat.current = "mp4";
 
     const timers: ReturnType<typeof setTimeout>[] = [];
     timers.push(setTimeout(() => { setStage("count3"); tick(); }, 900));
@@ -103,36 +109,29 @@ export function DrawExperienceModal({
       }
       setDraw(d);
 
-      // ── Start video rendering in parallel ──────────────────────────────────
-      if (canGenVideo) {
+      // ── Start rendering in parallel (video or PNG) ────────────────────────
+      const videoData: DrawVideoData = {
+        rifaTitle: rifa.title,
+        rifaImage: rifa.image,
+        prize: rifa.prize,
+        drawDate: formatDateTime(d.drawnAt),
+        participantNumbers: soldList,
+        winnerNumber: d.winnerNumber,
+        winnerName: d.winnerName ?? "Vencedor",
+      };
+
+      if (onIOS) {
+        // iOS Safari: generate a premium PNG result image
         setVideoState("rendering");
-        setVideoPct(0);
-        setVideoLabel("Preparando…");
-
-        const videoData: DrawVideoData = {
-          rifaTitle: rifa.title,
-          rifaImage: rifa.image,
-          prize: rifa.prize,
-          drawDate: formatDateTime(d.drawnAt),
-          participantNumbers: soldList,
-          winnerNumber: d.winnerNumber,
-          winnerName: d.winnerName ?? "Vencedor",
-        };
-
-        renderDrawVideo(videoData, (pct, label) => {
-          setVideoPct(pct);
-          setVideoLabel(label);
-        })
+        setVideoPct(10);
+        setVideoLabel("Gerando imagem do resultado…");
+        generateResultPng(videoData)
           .then((result) => {
-            if (!result) {
-              setVideoState("failed");
-              return;
-            }
             videoBlob.current = result.blob;
             videoFilename.current = result.filename;
+            videoFormat.current = "png";
             setVideoState("done");
             setVideoPct(100);
-            // Save metadata to history
             const videoMeta: DrawVideo = {
               id: `v-${Date.now()}`,
               rifaId: rifa.id,
@@ -140,14 +139,46 @@ export function DrawExperienceModal({
               filename: result.filename,
               sizeBytes: result.blob.size,
               createdAt: new Date().toISOString(),
-              format: result.format,
+              format: "png",
             };
             saveDrawVideo(rifa.id, videoMeta);
-            toast.success("Vídeo do sorteio gerado com sucesso! 🎬");
+            toast.success("Imagem do sorteio gerada! 📸");
           })
           .catch(() => {
             setVideoState("failed");
-            toast.error("Não foi possível gerar o vídeo. Você pode baixar a imagem.");
+          });
+      } else if (canGenVideo) {
+        // Chrome / Firefox / Android: generate MP4 video
+        setVideoState("rendering");
+        setVideoPct(0);
+        setVideoLabel("Preparando…");
+        renderDrawVideo(videoData, (pct, label) => {
+          setVideoPct(pct);
+          setVideoLabel(label);
+        })
+          .then((result) => {
+            if (!result) { setVideoState("failed"); return; }
+            videoBlob.current = result.blob;
+            videoFilename.current = result.filename;
+            videoFormat.current = result.format as "mp4" | "webm" | "png";
+            setVideoState("done");
+            setVideoPct(100);
+            const videoMeta: DrawVideo = {
+              id: `v-${Date.now()}`,
+              rifaId: rifa.id,
+              drawId: d.id,
+              filename: result.filename,
+              sizeBytes: result.blob.size,
+              createdAt: new Date().toISOString(),
+              format: result.format as "mp4" | "png",
+            };
+            saveDrawVideo(rifa.id, videoMeta);
+            const label = result.format === "mp4" ? "Vídeo gerado com sucesso! 🎬" : "Arquivo gerado com sucesso!";
+            toast.success(label);
+          })
+          .catch(() => {
+            setVideoState("failed");
+            toast.error("Não foi possível gerar o vídeo. Baixe a imagem do resultado.");
           });
       }
 
@@ -205,18 +236,20 @@ export function DrawExperienceModal({
     if (v) suspenseStop();
   };
 
-  const handleDownloadVideo = () => {
+  const handleDownloadVideo = async () => {
     if (!videoBlob.current) return;
-    downloadBlob(videoBlob.current, videoFilename.current);
-    toast.success("Download iniciado!");
+    const title = `🎉 Resultado: ${rifa.title}`;
+    await shareOrDownload(videoBlob.current, videoFilename.current, title);
   };
 
   const handleDownloadImage = async () => {
     if (!shareRef.current || !draw) return;
     try {
       const url = await nodeToPng(shareRef.current);
-      downloadDataUrl(url, `rifa-${rifa.id}-resultado.png`);
-      toast.success("Imagem gerada!");
+      const resp = await fetch(url);
+      const blob = await resp.blob();
+      const filename = `rifa-${rifa.id}-resultado.png`;
+      await shareOrDownload(blob, filename, `🎉 Resultado: ${rifa.title}`);
     } catch {
       toast.error("Não foi possível gerar a imagem.");
     }
@@ -224,15 +257,29 @@ export function DrawExperienceModal({
 
   const handleWhats = async () => {
     if (!draw) return;
-    let url: string | undefined;
+    // On mobile with video/image ready: use native share
+    if (videoBlob.current) {
+      await shareOrDownload(
+        videoBlob.current,
+        videoFilename.current,
+        `🎉 Resultado: ${rifa.title}`,
+      );
+      return;
+    }
+    // Fallback: open WhatsApp with text
+    let imgUrl: string | undefined;
     try {
-      if (shareRef.current) url = await nodeToPng(shareRef.current);
+      if (shareRef.current) imgUrl = await nodeToPng(shareRef.current);
     } catch {}
     const text = `🎉 Resultado da rifa "${rifa.title}"!\nNúmero vencedor: ${String(draw.winnerNumber).padStart(3, "0")}\nGanhador: ${draw.winnerName ?? "—"}`;
-    await shareOnWhatsApp(text, url);
+    await shareOnWhatsApp(text, imgUrl);
   };
 
   const handleInsta = async () => {
+    if (videoBlob.current) {
+      await shareOrDownload(videoBlob.current, videoFilename.current, `🎉 ${rifa.title}`);
+      return;
+    }
     if (!shareRef.current) return;
     try {
       const url = await nodeToPng(shareRef.current);
@@ -434,13 +481,17 @@ export function DrawExperienceModal({
 
                 {!presentation && (
                   <div className="mt-2 flex flex-col sm:flex-row sm:flex-wrap justify-center gap-2 w-full max-w-md px-4">
-                    {/* Primary: Download video (when ready) or image */}
+                    {/* Primary: Download video/image button */}
                     {videoState === "done" && (
                       <Button
                         onClick={handleDownloadVideo}
                         className="w-full sm:w-auto bg-gradient-to-r from-violet-500 to-indigo-600 text-white hover:opacity-90"
                       >
-                        <Video className="mr-1 h-4 w-4" /> Baixar Vídeo MP4
+                        {videoFormat.current === "png" ? (
+                          <><Download className="mr-1 h-4 w-4" /> Baixar / Compartilhar Imagem</>
+                        ) : (
+                          <><Video className="mr-1 h-4 w-4" /> Baixar / Compartilhar Vídeo MP4</>
+                        )}
                       </Button>
                     )}
                     {(videoState === "failed" || !canGenVideo) && (
