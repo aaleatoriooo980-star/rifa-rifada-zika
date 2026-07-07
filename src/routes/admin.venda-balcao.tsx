@@ -29,6 +29,7 @@ import {
   User,
   Phone,
   Search,
+  Plus,
   CheckCircle,
   AlertCircle,
   ArrowRight,
