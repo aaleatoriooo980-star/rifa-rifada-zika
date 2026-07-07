@@ -32,6 +32,10 @@ import {
   ArrowRight,
   RefreshCw,
   ShoppingBag,
+  QrCode,
+  Banknote,
+  CreditCard,
+  Coins,
 } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -138,9 +142,8 @@ function VendaBalcao() {
     );
   }, [selectedNums.length, selectedRifa]);
 
-  // Step 5 & 6: Payment Method & Payment Status
+  // Step 5: Payment Method
   const [paymentMethod, setPaymentMethod] = useState<string>("");
-  const [paymentStatus, setPaymentStatus] = useState<"pago" | "pendente">("pago");
 
   // Step 7: Confirm Sale Modal
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -181,7 +184,7 @@ function VendaBalcao() {
           userId: selectedClientId,
           numbers: selectedNums,
           paymentMethod,
-          status: paymentStatus,
+          status: "pago",
         });
 
         setLastCreatedOrder(order);
@@ -206,7 +209,6 @@ function VendaBalcao() {
     setSelectedClientId("");
     setClientSearch("");
     setPaymentMethod("");
-    setPaymentStatus("pago");
     setSuccessOpen(false);
     setLastCreatedOrder(null);
   };
@@ -540,7 +542,8 @@ Boa sorte!`;
                       }`}
                     >
                       <RadioGroupItem value="pix" id="pay-pix" className="sr-only" />
-                      <span>📱 PIX</span>
+                      <QrCode className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span>PIX</span>
                     </Label>
                     <Label
                       htmlFor="pay-cash"
@@ -549,7 +552,8 @@ Boa sorte!`;
                       }`}
                     >
                       <RadioGroupItem value="dinheiro" id="pay-cash" className="sr-only" />
-                      <span>💵 Dinheiro</span>
+                      <Banknote className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span>Dinheiro</span>
                     </Label>
                     <Label
                       htmlFor="pay-debit"
@@ -558,7 +562,8 @@ Boa sorte!`;
                       }`}
                     >
                       <RadioGroupItem value="debito" id="pay-debit" className="sr-only" />
-                      <span>💳 Débito</span>
+                      <CreditCard className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span>Débito</span>
                     </Label>
                     <Label
                       htmlFor="pay-credit"
@@ -567,7 +572,8 @@ Boa sorte!`;
                       }`}
                     >
                       <RadioGroupItem value="credito" id="pay-credit" className="sr-only" />
-                      <span>💳 Crédito</span>
+                      <CreditCard className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span>Crédito</span>
                     </Label>
                     <Label
                       htmlFor="pay-other"
@@ -576,38 +582,8 @@ Boa sorte!`;
                       }`}
                     >
                       <RadioGroupItem value="outro" id="pay-other" className="sr-only" />
-                      <span>⚙️ Outro</span>
-                    </Label>
-                  </RadioGroup>
-                </div>
-              )}
-
-              {/* Step 6: Status do pagamento */}
-              {selectedNums.length > 0 && paymentMethod && (
-                <div className="space-y-3 border-t pt-3">
-                  <Label className="font-semibold text-sm">Passo 6: Status do Pagamento</Label>
-                  <RadioGroup
-                    value={paymentStatus}
-                    onValueChange={(val) => setPaymentStatus(val as "pago" | "pendente")}
-                    className="flex gap-4 mt-1.5"
-                  >
-                    <Label
-                      htmlFor="status-pago"
-                      className={`flex-1 flex items-center justify-center gap-2 border p-2 rounded-lg cursor-pointer transition-colors ${
-                        paymentStatus === "pago" ? "border-success bg-success/5 text-success font-semibold" : ""
-                      }`}
-                    >
-                      <RadioGroupItem value="pago" id="status-pago" className="sr-only" />
-                      <span>Pago</span>
-                    </Label>
-                    <Label
-                      htmlFor="status-pendente"
-                      className={`flex-1 flex items-center justify-center gap-2 border p-2 rounded-lg cursor-pointer transition-colors ${
-                        paymentStatus === "pendente" ? "border-warning bg-warning/5 text-warning font-semibold" : ""
-                      }`}
-                    >
-                      <RadioGroupItem value="pendente" id="status-pendente" className="sr-only" />
-                      <span>Pendente</span>
+                      <Coins className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span>Outro</span>
                     </Label>
                   </RadioGroup>
                 </div>
@@ -662,13 +638,7 @@ Boa sorte!`;
             </div>
             <div className="flex justify-between border-b pb-1">
               <span className="text-muted-foreground">Status:</span>
-              <span
-                className={`font-semibold ${
-                  paymentStatus === "pago" ? "text-success" : "text-warning"
-                }`}
-              >
-                {paymentStatus === "pago" ? "Pago (Reservas Finalizadas)" : "Pendente (Reservado)"}
-              </span>
+              <span className="font-semibold text-success">Pago</span>
             </div>
           </div>
           <DialogFooter className="flex gap-2">
