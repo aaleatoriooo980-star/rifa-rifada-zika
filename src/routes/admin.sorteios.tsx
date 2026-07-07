@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRifas } from "@/context/RifasContext";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,17 +8,27 @@ import { Badge } from "@/components/ui/badge";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { formatDateTime } from "@/lib/format";
 import { useCountdown } from "@/lib/useCountdown";
-import { Trophy, Sparkles, Presentation, Video, StopCircle, Circle, Lock } from "lucide-react";
+import {
+  Trophy,
+  Sparkles,
+  Presentation,
+  Video,
+  Download,
+  Lock,
+  Film,
+} from "lucide-react";
 import { DrawExperienceModal } from "@/components/draw/DrawExperienceModal";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
-import {
-  startScreenRecording,
-  downloadBlob,
-  type Recorder,
-} from "@/lib/screenRecorder";
 import { canDraw, eligibleDrawNumbers, isRifaClosed } from "@/lib/rifaStatus";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  renderDrawVideo,
+  downloadBlob,
+  isVideoSupported,
+  type DrawVideoData,
+} from "@/lib/canvasVideoRenderer";
+import type { DrawVideo } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/sorteios")({
   head: () => ({ meta: [{ title: "Sorteios — Admin" }] }),
@@ -44,15 +54,125 @@ function CountdownLine({ target }: { target?: string }) {
   );
 }
 
+function VideoHistorySection({
+  videos,
+  rifa,
+  draw,
+  soldList,
+  saveDrawVideo,
+}: {
+  videos: DrawVideo[];
+  rifa: import("@/lib/types").Rifa;
+  draw: import("@/lib/types").Draw;
+  soldList: number[];
+  saveDrawVideo: (rifaId: string, v: DrawVideo) => void;
+}) {
+  const [regenerating, setRegenerating] = useState(false);
+
+  const handleRegenerate = async () => {
+    if (!isVideoSupported()) {
+      toast.error("Seu dispositivo não suporta geração de vídeo. Use Chrome no Desktop ou Android.");
+      return;
+    }
+    setRegenerating(true);
+    toast.loading("Gerando vídeo…", { id: "regen" });
+    try {
+      const videoData: DrawVideoData = {
+        rifaTitle: rifa.title,
+        rifaImage: rifa.image,
+        prize: rifa.prize,
+        drawDate: formatDateTime(draw.drawnAt),
+        participantNumbers: soldList,
+        winnerNumber: draw.winnerNumber,
+        winnerName: draw.winnerName ?? "Vencedor",
+      };
+      const result = await renderDrawVideo(videoData, (pct, label) => {
+        toast.loading(`${label} ${pct}%`, { id: "regen" });
+      });
+      toast.dismiss("regen");
+      if (!result) {
+        toast.error("Não foi possível gerar o vídeo neste dispositivo.");
+        return;
+      }
+      downloadBlob(result.blob, result.filename);
+      const videoMeta: DrawVideo = {
+        id: `v-${Date.now()}`,
+        rifaId: rifa.id,
+        drawId: draw.id,
+        filename: result.filename,
+        sizeBytes: result.blob.size,
+        createdAt: new Date().toISOString(),
+        format: result.format,
+      };
+      saveDrawVideo(rifa.id, videoMeta);
+      toast.success("Vídeo gerado e download iniciado!");
+    } catch (e: any) {
+      toast.dismiss("regen");
+      toast.error(e?.message ?? "Falha ao gerar vídeo.");
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 border-t pt-4 space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <Film className="h-4 w-4" />
+          Vídeos do Sorteio
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleRegenerate}
+          disabled={regenerating}
+          className="text-xs"
+        >
+          <Video className="mr-1 h-3.5 w-3.5" />
+          {regenerating ? "Gerando…" : "Gerar / Baixar Vídeo"}
+        </Button>
+      </div>
+
+      {videos.length === 0 ? (
+        <p className="text-xs text-muted-foreground">Nenhum vídeo gerado ainda.</p>
+      ) : (
+        <div className="space-y-2">
+          {videos.map((v) => (
+            <div
+              key={v.id}
+              className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-xs"
+            >
+              <div className="min-w-0">
+                <div className="font-medium truncate">{v.filename}</div>
+                <div className="text-muted-foreground">
+                  {formatDateTime(v.createdAt)} · {(v.sizeBytes / 1024 / 1024).toFixed(1)} MB ·{" "}
+                  <span className="uppercase">{v.format}</span>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="ml-2 shrink-0"
+                onClick={handleRegenerate}
+                disabled={regenerating}
+                title="Gerar novamente e baixar"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Sorteios() {
-  const { rifas, numbers, orders, draws, drawRifa, closeRifa } = useRifas();
+  const { rifas, numbers, orders, draws, drawRifa, closeRifa, saveDrawVideo } = useRifas();
   const { users } = useAuth();
   const [openRifa, setOpenRifa] = useState<string | null>(null);
   const [confirmCloseId, setConfirmCloseId] = useState<string | null>(null);
   const [presentation, setPresentation] = useState(false);
-  const [recording, setRecording] = useState(false);
-  const [converting, setConverting] = useState(false);
-  const recorderRef = useRef<Recorder | null>(null);
 
   const visible = rifas.filter((r) => !r.archived);
   const activeRifa = visible.find((r) => r.id === openRifa);
@@ -65,45 +185,7 @@ function Sorteios() {
       ? `${window.location.origin}/rifa/${nextRifa.id}`
       : undefined;
 
-  const startRecording = async () => {
-    try {
-      const rec = await startScreenRecording();
-      recorderRef.current = rec;
-      setRecording(true);
-      toast.success(
-        rec.willConvert
-          ? "Gravação iniciada (será convertida para MP4 ao finalizar)."
-          : "Gravação iniciada em MP4.",
-      );
-    } catch (e: any) {
-      toast.error(e?.message ?? "Falha ao iniciar gravação.");
-    }
-  };
-
-  const stopRecording = async () => {
-    const rec = recorderRef.current;
-    if (!rec) return;
-    try {
-      const result = await rec.stop({
-        onConverting: () => {
-          setConverting(true);
-          toast.loading("Convertendo para MP4…", { id: "mp4-convert" });
-        },
-      });
-      toast.dismiss("mp4-convert");
-      downloadBlob(result.blob, result.filename);
-      toast.success("Gravação finalizada — download iniciado.");
-    } catch (e: any) {
-      toast.dismiss("mp4-convert");
-      toast.error(e?.message ?? "Falha ao finalizar gravação.");
-    } finally {
-      recorderRef.current = null;
-      setRecording(false);
-      setConverting(false);
-    }
-  };
-
-  const handleOpenDraw = async (rifaId: string, presentationMode: boolean) => {
+  const handleOpenDraw = (rifaId: string, presentationMode: boolean) => {
     const rifa = visible.find((r) => r.id === rifaId);
     if (!rifa) return;
     const eligible = eligibleDrawNumbers(numbers, rifaId, orders);
@@ -112,70 +194,23 @@ function Sorteios() {
       toast.error(v.reason ?? "Não é possível realizar o sorteio.");
       return;
     }
-
-    if (!recording) {
-      try {
-        const rec = await startScreenRecording();
-        recorderRef.current = rec;
-        setRecording(true);
-        toast.success(
-          rec.willConvert
-            ? "Gravação iniciada (será convertida para MP4 ao finalizar)."
-            : "Gravação iniciada em MP4.",
-        );
-      } catch (e: any) {
-        // On mobile or unsupported browsers, proceed without recording
-        const isMobileError =
-          e?.message?.includes("dispositivos móveis") ||
-          e?.message?.includes("getDisplayMedia") ||
-          e?.message?.includes("não suporta");
-        if (isMobileError) {
-          toast.warning("Gravação indisponível neste dispositivo. O sorteio continuará normalmente.");
-          // Don't return — proceed with the draw anyway
-        } else {
-          toast.error(e?.message ?? "Falha ao iniciar gravação. O sorteio não foi iniciado.");
-          return;
-        }
-      }
-    }
-
     setPresentation(presentationMode);
     setOpenRifa(rifaId);
   };
 
   const handleCloseDraw = () => {
     setOpenRifa(null);
-    if (recorderRef.current) {
-      stopRecording();
-    }
   };
 
   return (
     <div className="space-y-6">
-      {recording && (
-        <div className="fixed right-4 top-4 z-[9999] flex items-center gap-2 rounded-full bg-destructive px-3 py-1.5 text-xs font-bold text-destructive-foreground shadow-elevated">
-          <Circle className="h-2.5 w-2.5 animate-pulse fill-current" />
-          REC {converting && "· convertendo…"}
-        </div>
-      )}
-
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold">Sorteios</h1>
           <p className="text-sm text-muted-foreground">
-            Realize sorteios com uma experiência cinematográfica para gravar e compartilhar.
+            Realize sorteios e baixe o vídeo MP4 para compartilhar nas redes sociais.
           </p>
         </div>
-        {!recording ? (
-          <Button onClick={startRecording} variant="outline" className="w-full sm:w-auto">
-            <Video className="mr-1 h-4 w-4" /> Iniciar Gravação
-          </Button>
-        ) : (
-          <Button onClick={stopRecording} variant="destructive" disabled={converting} className="w-full sm:w-auto">
-            <StopCircle className="mr-1 h-4 w-4" />
-            {converting ? "Convertendo…" : "Parar Gravação"}
-          </Button>
-        )}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -184,6 +219,10 @@ function Sorteios() {
           const draw = draws.find((d) => d.rifaId === r.id);
           const closed = isRifaClosed(r);
           const validation = canDraw(r, eligible);
+          const soldNums = numbers
+            .filter((n) => n.rifaId === r.id && n.status === "vendido")
+            .map((n) => n.number);
+
           return (
             <Card key={r.id} className="hover-elevate overflow-hidden p-0 shadow-soft">
               <div className="flex flex-col gap-4 p-4 sm:flex-row">
@@ -215,20 +254,31 @@ function Sorteios() {
 
               <div className="border-t bg-muted/20 p-4">
                 {draw ? (
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/15 text-success">
-                      <Trophy className="h-6 w-6" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs text-muted-foreground">Número vencedor</div>
-                      <div className="font-display text-xl font-bold">
-                        {String(draw.winnerNumber).padStart(3, "0")} —{" "}
-                        {draw.winnerName ?? "—"}
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/15 text-success">
+                        <Trophy className="h-6 w-6" />
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        Sorteado em {formatDateTime(draw.drawnAt)}
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs text-muted-foreground">Número vencedor</div>
+                        <div className="font-display text-xl font-bold">
+                          {String(draw.winnerNumber).padStart(3, "0")} —{" "}
+                          {draw.winnerName ?? "—"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Sorteado em {formatDateTime(draw.drawnAt)}
+                        </div>
                       </div>
                     </div>
+
+                    {/* Video history section */}
+                    <VideoHistorySection
+                      videos={r.drawVideos ?? []}
+                      rifa={r}
+                      draw={draw}
+                      soldList={soldNums}
+                      saveDrawVideo={saveDrawVideo}
+                    />
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -298,10 +348,11 @@ function Sorteios() {
         onConfirm={() => {
           if (confirmCloseId) {
             closeRifa(confirmCloseId);
-            toast.success("Rifa encerrada com sucesso!");
-            setConfirmCloseId(null);
+            toast.success("Rifa encerrada com sucesso.");
           }
+          setConfirmCloseId(null);
         }}
+        variant="destructive"
       />
     </div>
   );

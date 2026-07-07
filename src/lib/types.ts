@@ -36,6 +36,8 @@ export interface Rifa {
   winnerNumber?: number;
   winnerUserId?: string;
   packages?: RifaPackage[];
+  /** History of generated videos for this rifa's draws */
+  drawVideos?: DrawVideo[];
 }
 
 export type NumberStatus = "disponivel" | "aguardando" | "vendido";
@@ -68,4 +70,16 @@ export interface Draw {
   winnerUserId?: string;
   winnerName?: string;
   drawnAt: string;
+}
+
+/** Metadata about a generated draw video (the blob itself is downloaded, not stored). */
+export interface DrawVideo {
+  id: string;
+  rifaId: string;
+  drawId: string;
+  filename: string;
+  sizeBytes: number;
+  createdAt: string;
+  /** mp4 for Chrome/Firefox/Android, png for Safari iOS */
+  format: "mp4" | "png";
 }

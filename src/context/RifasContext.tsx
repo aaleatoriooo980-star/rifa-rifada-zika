@@ -10,7 +10,7 @@ import {
 import { mockRifas } from "@/mocks/mockRifas";
 import { mockOrders, mockDraws } from "@/mocks/mockOrders";
 import { buildInitialNumbers } from "@/mocks/buildNumbers";
-import type { Draw, Order, Rifa, RifaNumber } from "@/lib/types";
+import type { Draw, DrawVideo, Order, Rifa, RifaNumber } from "@/lib/types";
 import { canDraw, eligibleDrawNumbers, isRifaClosed } from "@/lib/rifaStatus";
 import { computePrice } from "@/lib/pricing";
 
@@ -41,6 +41,7 @@ interface RifasContextValue extends State {
     rifaId: string,
     users: { id: string; name: string }[],
   ) => Draw | null;
+  saveDrawVideo: (rifaId: string, video: DrawVideo) => void;
 }
 
 const RifasContext = createContext<RifasContextValue | null>(null);
@@ -260,6 +261,17 @@ export function RifasProvider({ children }: { children: ReactNode }) {
     [state.numbers, state.orders, state.rifas],
   );
 
+  const saveDrawVideo = useCallback((rifaId: string, video: DrawVideo) => {
+    setState((s) => ({
+      ...s,
+      rifas: s.rifas.map((r) =>
+        r.id === rifaId
+          ? { ...r, drawVideos: [...(r.drawVideos ?? []), video] }
+          : r,
+      ),
+    }));
+  }, []);
+
   const value = useMemo<RifasContextValue>(
     () => ({
       ...state,
@@ -274,6 +286,7 @@ export function RifasProvider({ children }: { children: ReactNode }) {
       getNumbersForRifa,
       getBuyersForRifa,
       drawRifa,
+      saveDrawVideo,
     }),
     [
       state,
@@ -288,6 +301,7 @@ export function RifasProvider({ children }: { children: ReactNode }) {
       getNumbersForRifa,
       getBuyersForRifa,
       drawRifa,
+      saveDrawVideo,
     ],
   );
 

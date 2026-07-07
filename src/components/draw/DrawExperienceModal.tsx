@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import {
   Trophy,
   X,
@@ -14,15 +15,28 @@ import {
   MessageCircle,
   Instagram,
   Ticket,
+  Video,
+  Loader2,
+  CheckCircle2,
+  Facebook,
+  Link,
 } from "lucide-react";
 import { tick, suspenseStart, suspenseStop, victory, setMuted, isMuted } from "@/lib/sound";
 import { nodeToPng, downloadDataUrl, shareOnWhatsApp, shareOnInstagram } from "@/lib/share";
 import { ShareResultCard } from "./ShareResultCard";
 import { formatDateTime } from "@/lib/format";
-import type { Draw, Rifa, RifaNumber } from "@/lib/types";
+import type { Draw, DrawVideo, Rifa, RifaNumber } from "@/lib/types";
 import { toast } from "sonner";
+import {
+  renderDrawVideo,
+  downloadBlob,
+  isVideoSupported,
+  type DrawVideoData,
+} from "@/lib/canvasVideoRenderer";
+import { useRifas } from "@/context/RifasContext";
 
 type Stage = "prepare" | "count3" | "count2" | "count1" | "spin" | "winner";
+type VideoState = "idle" | "rendering" | "done" | "failed";
 
 interface Props {
   open: boolean;
@@ -45,10 +59,20 @@ export function DrawExperienceModal({
   presentation,
   onTogglePresentation,
 }: Props) {
+  const { saveDrawVideo } = useRifas();
   const [stage, setStage] = useState<Stage>("prepare");
   const [reelValue, setReelValue] = useState<number>(0);
   const [draw, setDraw] = useState<Draw | null>(null);
   const [muted, setMutedLocal] = useState(isMuted());
+
+  // Video generation state
+  const [videoState, setVideoState] = useState<VideoState>("idle");
+  const [videoPct, setVideoPct] = useState(0);
+  const [videoLabel, setVideoLabel] = useState("");
+  const videoBlob = useRef<Blob | null>(null);
+  const videoFilename = useRef<string>("");
+  const canGenVideo = isVideoSupported();
+
   const shareRef = useRef<HTMLDivElement>(null);
 
   const soldList = useMemo(() => soldNumbers.map((n) => n.number), [soldNumbers]);
@@ -58,6 +82,10 @@ export function DrawExperienceModal({
     setStage("prepare");
     setDraw(null);
     setReelValue(soldList[0] ?? 0);
+    setVideoState("idle");
+    setVideoPct(0);
+    videoBlob.current = null;
+    videoFilename.current = "";
 
     const timers: ReturnType<typeof setTimeout>[] = [];
     timers.push(setTimeout(() => { setStage("count3"); tick(); }, 900));
@@ -75,6 +103,55 @@ export function DrawExperienceModal({
       }
       setDraw(d);
 
+      // ── Start video rendering in parallel ──────────────────────────────────
+      if (canGenVideo) {
+        setVideoState("rendering");
+        setVideoPct(0);
+        setVideoLabel("Preparando…");
+
+        const videoData: DrawVideoData = {
+          rifaTitle: rifa.title,
+          rifaImage: rifa.image,
+          prize: rifa.prize,
+          drawDate: formatDateTime(d.drawnAt),
+          participantNumbers: soldList,
+          winnerNumber: d.winnerNumber,
+          winnerName: d.winnerName ?? "Vencedor",
+        };
+
+        renderDrawVideo(videoData, (pct, label) => {
+          setVideoPct(pct);
+          setVideoLabel(label);
+        })
+          .then((result) => {
+            if (!result) {
+              setVideoState("failed");
+              return;
+            }
+            videoBlob.current = result.blob;
+            videoFilename.current = result.filename;
+            setVideoState("done");
+            setVideoPct(100);
+            // Save metadata to history
+            const videoMeta: DrawVideo = {
+              id: `v-${Date.now()}`,
+              rifaId: rifa.id,
+              drawId: d.id,
+              filename: result.filename,
+              sizeBytes: result.blob.size,
+              createdAt: new Date().toISOString(),
+              format: result.format,
+            };
+            saveDrawVideo(rifa.id, videoMeta);
+            toast.success("Vídeo do sorteio gerado com sucesso! 🎬");
+          })
+          .catch(() => {
+            setVideoState("failed");
+            toast.error("Não foi possível gerar o vídeo. Você pode baixar a imagem.");
+          });
+      }
+
+      // ── Spin animation ────────────────────────────────────────────────────
       const duration = 5000;
       const start = Date.now();
       let raf = 0;
@@ -128,7 +205,13 @@ export function DrawExperienceModal({
     if (v) suspenseStop();
   };
 
-  const handleGenerate = async () => {
+  const handleDownloadVideo = () => {
+    if (!videoBlob.current) return;
+    downloadBlob(videoBlob.current, videoFilename.current);
+    toast.success("Download iniciado!");
+  };
+
+  const handleDownloadImage = async () => {
     if (!shareRef.current || !draw) return;
     try {
       const url = await nodeToPng(shareRef.current);
@@ -157,6 +240,16 @@ export function DrawExperienceModal({
     } catch {
       toast.error("Falha ao gerar imagem.");
     }
+  };
+
+  const handleFacebook = () => {
+    const url = encodeURIComponent(window.location.origin);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, "_blank");
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.origin);
+    toast.success("Link copiado!");
   };
 
   if (!open || typeof document === "undefined") return null;
@@ -302,8 +395,72 @@ export function DrawExperienceModal({
                   <div>Sorteado em {formatDateTime(draw.drawnAt)}</div>
                 </div>
 
+                {/* ── Video generation status ──────────────────────────── */}
+                {canGenVideo && !presentation && (
+                  <div className="w-full max-w-md px-4">
+                    {videoState === "rendering" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-2xl bg-white/10 p-4 space-y-2"
+                      >
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                          <span>{videoLabel || "Gerando vídeo do sorteio…"}</span>
+                        </div>
+                        <Progress value={videoPct} className="h-2 bg-white/20" />
+                        <div className="text-xs opacity-60 text-right">{videoPct}%</div>
+                      </motion.div>
+                    )}
+                    {videoState === "done" && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="rounded-2xl bg-emerald-500/20 border border-emerald-500/40 p-4 flex items-center gap-3"
+                      >
+                        <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+                        <span className="text-sm font-medium text-emerald-200">
+                          Vídeo gerado com sucesso!
+                        </span>
+                      </motion.div>
+                    )}
+                    {videoState === "failed" && (
+                      <div className="rounded-2xl bg-white/5 border border-white/10 p-3 text-xs opacity-60 text-center">
+                        Vídeo indisponível neste dispositivo. Baixe a imagem do resultado.
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {!presentation && (
                   <div className="mt-2 flex flex-col sm:flex-row sm:flex-wrap justify-center gap-2 w-full max-w-md px-4">
+                    {/* Primary: Download video (when ready) or image */}
+                    {videoState === "done" && (
+                      <Button
+                        onClick={handleDownloadVideo}
+                        className="w-full sm:w-auto bg-gradient-to-r from-violet-500 to-indigo-600 text-white hover:opacity-90"
+                      >
+                        <Video className="mr-1 h-4 w-4" /> Baixar Vídeo MP4
+                      </Button>
+                    )}
+                    {(videoState === "failed" || !canGenVideo) && (
+                      <Button
+                        onClick={handleDownloadImage}
+                        variant="outline"
+                        className="w-full sm:w-auto border-white/30 bg-white/5 text-white hover:bg-white/10"
+                      >
+                        <Download className="mr-1 h-4 w-4" /> Baixar Imagem
+                      </Button>
+                    )}
+                    {videoState === "rendering" && (
+                      <Button
+                        disabled
+                        className="w-full sm:w-auto bg-white/10 text-white/50 cursor-not-allowed"
+                      >
+                        <Loader2 className="mr-1 h-4 w-4 animate-spin" /> Gerando vídeo…
+                      </Button>
+                    )}
+                    {/* Share buttons */}
                     <Button
                       onClick={handleWhats}
                       className="w-full sm:w-auto bg-emerald-500 text-white hover:bg-emerald-500/90"
@@ -318,11 +475,18 @@ export function DrawExperienceModal({
                       <Instagram className="mr-1 h-4 w-4" /> Instagram
                     </Button>
                     <Button
-                      onClick={handleGenerate}
+                      onClick={handleFacebook}
                       variant="outline"
                       className="w-full sm:w-auto border-white/30 bg-white/5 text-white hover:bg-white/10"
                     >
-                      <Download className="mr-1 h-4 w-4" /> Baixar imagem
+                      <Facebook className="mr-1 h-4 w-4" /> Facebook
+                    </Button>
+                    <Button
+                      onClick={handleCopyLink}
+                      variant="outline"
+                      className="w-full sm:w-auto border-white/30 bg-white/5 text-white hover:bg-white/10"
+                    >
+                      <Link className="mr-1 h-4 w-4" /> Copiar Link
                     </Button>
                     <Button
                       onClick={onClose}
