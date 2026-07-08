@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apresentação do Sistema — CampanhaFácil</title>
+    <title>Proposta Comercial & Apresentação — Rifa da Zika</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #10b981;
-            --dark: #0f172a;
-            --light: #f8fafc;
-            --gray: #64748b;
-            --border: #e2e8f0;
+            /* Cores oficiais do site */
+            --primary: oklch(0.62 0.16 155); /* Verde Esmeralda Premium */
+            --primary-dark: oklch(0.48 0.14 155);
+            --primary-light: oklch(0.94 0.04 155);
+            --dark: oklch(0.18 0.02 160); /* Grafite Escuro */
+            --light: oklch(0.99 0.005 150); /* Off-white Esverdeado */
+            --white: #ffffff;
+            --border: oklch(0.92 0.01 155);
+            --gray: oklch(0.5 0.02 160);
         }
 
         * {
@@ -24,10 +26,10 @@
         }
 
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Inter', sans-serif;
             color: var(--dark);
-            background-color: var(--light);
-            line-height: 1.6;
+            background-color: #f1f5f9;
+            line-height: 1.5;
         }
 
         .page {
@@ -35,9 +37,9 @@
             min-height: 297mm;
             padding: 20mm;
             margin: 10mm auto;
-            background: white;
+            background: var(--white);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            border-radius: 12px;
+            border-radius: 8px;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -45,13 +47,13 @@
             page-break-after: always;
         }
 
-        /* Cover Page styling */
+        /* Capa */
         .cover {
             justify-content: center;
             align-items: center;
             text-align: center;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--dark) 0%, #162a22 100%);
+            color: var(--white);
         }
 
         .cover-content {
@@ -59,36 +61,36 @@
         }
 
         .logo-badge {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 12px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 12px 28px;
             border-radius: 99px;
             display: inline-block;
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 600;
-            letter-spacing: 2px;
+            font-family: 'Sora', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: 3px;
             margin-bottom: 2rem;
-            color: #a5b4fc;
+            color: var(--primary);
         }
 
         h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 3.5rem;
+            font-family: 'Sora', sans-serif;
+            font-size: 3.2rem;
             font-weight: 800;
-            line-height: 1.1;
+            line-height: 1.15;
             margin-bottom: 1.5rem;
             letter-spacing: -1px;
-            background: linear-gradient(to right, #ffffff, #c7d2fe);
+            background: linear-gradient(to right, #ffffff, var(--primary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .subtitle {
-            font-size: 1.35rem;
+            font-size: 1.25rem;
             color: #94a3b8;
-            max-width: 500px;
+            max-width: 550px;
             margin: 0 auto 3rem auto;
             font-weight: 300;
         }
@@ -103,28 +105,29 @@
             color: #64748b;
         }
 
-        /* Inner Page styling */
+        /* Páginas Internas */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border);
             padding-bottom: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .header .logo {
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Sora', sans-serif;
             font-weight: 800;
             font-size: 1.2rem;
             color: var(--primary);
         }
 
         .header .page-title {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--gray);
+            font-weight: 600;
         }
 
         .content {
@@ -132,11 +135,11 @@
         }
 
         h2 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 2rem;
+            font-family: 'Sora', sans-serif;
+            font-size: 1.8rem;
             font-weight: 700;
             color: var(--dark);
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.2rem;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -145,82 +148,134 @@
         h2::before {
             content: '';
             display: inline-block;
-            width: 6px;
-            height: 1.5rem;
+            width: 5px;
+            height: 1.4rem;
             background-color: var(--primary);
             border-radius: 99px;
         }
 
         p {
-            margin-bottom: 1.2rem;
+            margin-bottom: 1rem;
             color: #334155;
-            font-size: 1.05rem;
+            font-size: 1rem;
         }
 
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-top: 1.5rem;
+            gap: 1.2rem;
+            margin-top: 1.2rem;
         }
 
         .card {
-            background: #f8fafc;
+            background: var(--light);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 1.5rem;
+            padding: 1.2rem;
         }
 
         .card h3 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.2rem;
-            margin-bottom: 0.75rem;
+            font-family: 'Sora', sans-serif;
+            font-size: 1.15rem;
+            margin-bottom: 0.5rem;
             color: var(--primary-dark);
+            font-weight: 700;
         }
 
-        .badge-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 1rem;
-        }
-
-        .badge {
-            background: #e0e7ff;
-            color: var(--primary-dark);
-            padding: 4px 12px;
-            border-radius: 99px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .badge.green {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        /* Bullet lists */
+        /* Listas */
         ul {
-            margin-left: 1.5rem;
-            margin-bottom: 1.5rem;
+            margin-left: 1.2rem;
+            margin-bottom: 1.2rem;
             color: #334155;
         }
 
         li {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
+        }
+
+        /* Tabelas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: var(--white);
+            text-align: left;
+            padding: 8px 12px;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            color: #334155;
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--light);
+        }
+
+        .table-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-top: 1rem;
+            color: var(--dark);
         }
 
         .footer {
             border-top: 1px solid var(--border);
             padding-top: 1rem;
-            margin-top: 2rem;
+            margin-top: 1.5rem;
             display: flex;
             justify-content: space-between;
             font-size: 0.8rem;
             color: var(--gray);
         }
 
-        /* Print overrides to enforce A4 sheets and strip web styling */
+        .badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 0.8rem;
+        }
+
+        .badge {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Botão de impressão */
+        .print-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 12px 24px;
+            font-family: 'Sora', sans-serif;
+            font-weight: 600;
+            border-radius: 99px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+        .print-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
         @media print {
             body {
                 background: white;
@@ -234,32 +289,9 @@
                 page-break-after: always;
                 border-radius: 0;
             }
-            /* Hide print button during printing */
             .print-btn {
                 display: none !important;
             }
-        }
-
-        .print-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 600;
-            border-radius: 99px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-            transition: all 0.2s ease;
-            z-index: 1000;
-        }
-
-        .print-btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
         }
     </style>
 </head>
@@ -267,129 +299,209 @@
 
     <button class="print-btn" onclick="window.print()">Salvar como PDF / Imprimir</button>
 
-    <!-- PAGE 1: COVER -->
+    <!-- PÁGINA 1: CAPA -->
     <div class="page cover">
         <div class="cover-content">
-            <div class="logo-badge">CAMPANHAFÁCIL</div>
-            <h1>Apresentação<br>do Sistema</h1>
-            <p class="subtitle">Plataforma premium para gestão de campanhas de prêmios, controle de vendas presenciais e online, e sorteios automatizados.</p>
+            <div class="logo-badge">RIFA DA ZIKA</div>
+            <h1>Proposta Comercial<br>& Apresentação</h1>
+            <p class="subtitle">Transforme suas rifas em vendas organizadas, profissionais e 100% digitais com o melhor sistema de gestão e sorteio.</p>
         </div>
         <div class="cover-footer">
-            <span>© 2026 CampanhaFácil</span>
-            <span>Documento de Especificação Técnica e Funcional</span>
+            <span>© 2026 Rifa da Zika</span>
+            <span>Documento Oficial de Apresentação</span>
         </div>
     </div>
 
-    <!-- PAGE 2: INTRO & ARCHITECTURE -->
+    <!-- PÁGINA 2: PROBLEMA & SOLUÇÃO -->
     <div class="page">
         <div class="header">
-            <span class="logo">CampanhaFácil</span>
-            <span class="page-title">01. Visão Geral & Arquitetura</span>
+            <span class="logo">Rifa da Zika</span>
+            <span class="page-title">01. Visão Geral</span>
         </div>
         <div class="content">
-            <h2>Introdução ao Sistema</h2>
-            <p>O <strong>CampanhaFácil</strong> é uma solução completa para gerenciamento e venda de bilhetes de sorteios e prêmios. O sistema oferece uma interface robusta para administradores gerenciarem suas campanhas e uma interface intuitiva para clientes realizarem compras de números via PIX de forma rápida e segura.</p>
+            <h2>Por que usar a Rifa da Zika?</h2>
+            <p>Organizar uma rifa de forma manual consome muito tempo e aumenta drasticamente a chance de erros.</p>
             
-            <h2 style="margin-top: 2rem;">Arquitetura Tecnológica</h2>
-            <p>A aplicação foi construída utilizando modernas tecnologias de desenvolvimento web, garantindo alta performance, responsividade e estabilidade:</p>
-            
-            <div class="grid-2">
-                <div class="card">
-                    <h3>Frontend Moderno</h3>
-                    <p>Interface responsiva baseada em React estruturada com roteamento dinâmico via TanStack Router para navegação suave e instantânea.</p>
-                    <div class="badge-list">
-                        <span class="badge">React</span>
-                        <span class="badge">TypeScript</span>
-                        <span class="badge">TanStack Router</span>
-                    </div>
-                </div>
-                <div class="card">
-                    <h3>Visualizações & Mídia</h3>
-                    <p>Gráficos interativos em tempo real via Recharts e gerador de vídeos MP4 nativo usando Canvas API para compartilhamento rápido nas redes.</p>
-                    <div class="badge-list">
-                        <span class="badge">Recharts</span>
-                        <span class="badge">Canvas API</span>
-                        <span class="badge">MediaRecorder</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="footer">
-            <span>Apresentação do Sistema — CampanhaFácil</span>
-            <span>Página 2 de 4</span>
-        </div>
-    </div>
-
-    <!-- PAGE 3: MAIN FEATURES -->
-    <div class="page">
-        <div class="header">
-            <span class="logo">CampanhaFácil</span>
-            <span class="page-title">02. Funcionalidades Core</span>
-        </div>
-        <div class="content">
-            <h2>Recursos Principais do Painel Admin</h2>
-            
-            <div class="card" style="margin-bottom: 1.5rem;">
-                <h3 style="display:flex; align-items:center; gap:8px;">
-                    Dashboard Financeiro e de Vendas
-                </h3>
-                <p>O painel administrativo consolida dados essenciais para o gestor em tempo real:</p>
-                <ul>
-                    <li><strong>Métricas Gerais:</strong> Total arrecadado, campanhas ativas, campanhas encerradas e total de bilhetes vendidos.</li>
-                    <li><strong>Gráfico Comparativo de Vendas:</strong> Visualização nítida comparando a receita gerada em Balcão (vendas físicas presenciais) vs. Online.</li>
-                    <li><strong>Gestão de Pacotes Promocionais:</strong> Editor dinâmico e flexível para criar descontos progressivos por quantidade de bilhetes comprados.</li>
+            <div class="card" style="margin: 1.5rem 0;">
+                <p style="margin-bottom:0.5rem; font-weight:600; color:var(--primary-dark);">Diga adeus a:</p>
+                <ul style="margin-bottom:0;">
+                    <li>Anotar números em papel que podem ser perdidos.</li>
+                    <li>Parar grupos de WhatsApp apenas para conferir comprovantes.</li>
+                    <li>Correr o risco de vender o mesmo número para dois compradores diferentes.</li>
                 </ul>
             </div>
 
-            <div class="card">
-                <h3 style="display:flex; align-items:center; gap:8px;">
-                    Experiência de Sorteio Automatizada
-                </h3>
-                <p>O módulo de sorteio simula a escolha do ganhador com alto impacto visual:</p>
+            <p>Com a <strong>Rifa da Zika</strong>, você gerencia toda a sua operação em um único lugar de forma simples, transparente e automatizada.</p>
+
+            <h2 style="margin-top: 2rem;">O que você terá no sistema:</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Venda Multicanal</h3>
+                    <p style="font-size:0.9rem;">Opção de venda online direta pelo link da campanha ou venda presencial (Balcão) operada pelo administrador.</p>
+                </div>
+                <div class="card">
+                    <h3>Sorteio Automático</h3>
+                    <p style="font-size:0.9rem;">Módulo de sorteio com visual imersivo e geração nativa de vídeo do resultado para redes sociais.</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <span>Proposta Rifa da Zika</span>
+            <span>Página 2 de 5</span>
+        </div>
+    </div>
+
+    <!-- PÁGINA 3: FUNCIONALIDADES -->
+    <div class="page">
+        <div class="header">
+            <span class="logo">Rifa da Zika</span>
+            <span class="page-title">02. Funcionalidades do Sistema</span>
+        </div>
+        <div class="content">
+            <h2>Recursos Inclusos na Plataforma</h2>
+            <p>Todas as ferramentas necessárias para criar, divulgar, gerenciar e sortear as suas campanhas de prêmios:</p>
+
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div class="card">
+                    <h3>Gestão de Campanhas</h3>
+                    <ul>
+                        <li>Criação de rifas ilimitadas</li>
+                        <li>Editor de pacotes promocionais</li>
+                        <li>Controle automático de números</li>
+                        <li>Preços flexíveis e customizáveis</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>Controle Financeiro</h3>
+                    <ul>
+                        <li>Status de pagamento automático</li>
+                        <li>Histórico detalhado de pedidos</li>
+                        <li>Cadastro completo de compradores</li>
+                        <li>Relatórios integrados de vendas</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 1.5rem;">
+                <h3>Experiência de Sorteio Premium</h3>
+                <p style="font-size: 0.95rem; margin-bottom: 0.5rem;">Quando a campanha for finalizada, realize o sorteio na própria plataforma:</p>
                 <ul>
-                    <li><strong>Modo Apresentação:</strong> Tela cheia otimizada para projetores ou transmissões ao vivo (Live streaming).</li>
-                    <li><strong>Geração Instantânea de Vídeos:</strong> O sistema compila automaticamente um vídeo da animação do sorteio com a foto do prêmio e dados do ganhador para exportação e postagem instantânea (Instagram/WhatsApp).</li>
+                    <li>Animação imersiva com contagem regressiva e efeitos visuais.</li>
+                    <li>Modo Apresentação (Tela cheia para Lives/Projetores).</li>
+                    <li>Geração de vídeo MP4 e banners em alta definição prontos para download.</li>
                 </ul>
             </div>
         </div>
         <div class="footer">
-            <span>Apresentação do Sistema — CampanhaFácil</span>
-            <span>Página 3 de 4</span>
+            <span>Proposta Rifa da Zika</span>
+            <span>Página 3 de 5</span>
         </div>
     </div>
 
-    <!-- PAGE 4: PROCESS FLOW & BENEFITS -->
+    <!-- PÁGINA 4: PLANOS COMERCIAIS -->
     <div class="page">
         <div class="header">
-            <span class="logo">CampanhaFácil</span>
-            <span class="page-title">03. Fluxo de Operação</span>
+            <span class="logo">Rifa da Zika</span>
+            <span class="page-title">03. Planos Comerciais</span>
         </div>
         <div class="content">
-            <h2>Fluxo de Compra e Sorteio</h2>
-            <p>O processo foi otimizado para minimizar fricção e garantir a máxima taxa de conversão:</p>
-            
-            <div style="margin: 2rem 0; border-left: 4px solid var(--primary); padding-left: 1.5rem;">
-                <p style="margin-bottom: 0.8rem;"><strong>1. Criação da Campanha:</strong> O administrador cadastra o prêmio, fotos, quantidade de números e define pacotes de desconto promocionais.</p>
-                <p style="margin-bottom: 0.8rem;"><strong>2. Venda Multicanal:</strong> Vendas são feitas online pelo próprio cliente ou fisicamente pelo operador de balcão (gerando o PIX Copia e Cola instantaneamente).</p>
-                <p style="margin-bottom: 0.8rem;"><strong>3. Encerramento & Sorteio:</strong> Atingido o prazo, o administrador realiza o sorteio na plataforma com animações 3D de contagem regressiva e confetes.</p>
-                <p><strong>4. Compartilhamento do Resultado:</strong> O sistema gera o vídeo ou banner em alta resolução e o administrador compartilha diretamente.</p>
+            <h2>Modelos de Parceria</h2>
+            <p>Oferecemos dois planos flexíveis de acordo com a sua necessidade de uso da plataforma:</p>
+
+            <div class="grid-2">
+                <div class="card" style="border-top: 4px solid var(--gray);">
+                    <h3>Plano Avulso</h3>
+                    <p style="font-size:0.9rem; font-weight:600; margin-bottom:0.5rem;">Sem mensalidade</p>
+                    <p style="font-size:0.85rem; color:#475569;">Pague apenas quando utilizar a plataforma.</p>
+                    <p style="font-size:1.1rem; font-weight:800; color:var(--dark); margin-top:0.5rem;">8% sobre o valor arrecadado</p>
+                    <div class="badge-list">
+                        <span class="badge">Todas as funções</span>
+                        <span class="badge">Suporte</span>
+                    </div>
+                </div>
+                <div class="card" style="border-top: 4px solid var(--primary);">
+                    <h3>Plano Profissional</h3>
+                    <p style="font-size:0.9rem; font-weight:600; margin-bottom:0.5rem;">R$ 100,00 por mês</p>
+                    <p style="font-size:0.85rem; color:#475569;">Ideal para quem realiza rifas com frequência.</p>
+                    <p style="font-size:1.1rem; font-weight:800; color:var(--primary-dark); margin-top:0.5rem;">+ 2% sobre o valor arrecadado</p>
+                    <div class="badge-list">
+                        <span class="badge">Rifas ilimitadas</span>
+                        <span class="badge">Suporte prioritário</span>
+                    </div>
+                </div>
             </div>
 
-            <h2 style="margin-top: 2rem;">Vantagens da Solução</h2>
-            <div class="grid-2">
-                <div class="card" style="background:#f0fdf4; border-color:#bbf7d0;">
-                    <h3 style="color:#166534;">Operação Otimizada</h3>
-                    <p style="font-size: 0.95rem; color:#1e3f20;">Gestão unificada que reduz erros de contabilidade entre bilhetes físicos vendidos na loja e vendas online.</p>
-                </div>
-                <div class="card" style="background:#eff6ff; border-color:#bfdbfe;">
-                    <h3 style="color:#1e40af;">Marketing Eficiente</h3>
-                    <p style="font-size: 0.95rem; color:#1e293b;">Exportação automatizada de mídia poupa tempo com design de posts e agiliza a divulgação dos vencedores.</p>
-                </div>
-            </div>
+            <div class="table-title">Simulação de Custos: Plano Avulso</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Valor Total Arrecadado</th>
+                        <th>Taxa da Plataforma (8%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>R$ 2.000,00</td>
+                        <td>R$ 160,00</td>
+                    </tr>
+                    <tr>
+                        <td>R$ 5.000,00</td>
+                        <td>R$ 400,00</td>
+                    </tr>
+                    <tr>
+                        <td>R$ 10.000,00</td>
+                        <td>R$ 800,00</td>
+                    </tr>
+                    <tr>
+                        <td>R$ 20.000,00</td>
+                        <td>R$ 1.600,00</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         <div class="footer">
-            <span>Apresentação do Sistema — CampanhaFácil</span>
-            <span>Página 4 de 4</span>
+            <span>Proposta Rifa da Zika</span>
+            <span>Página 4 de 5</span>
+        </div>
+    </div>
+
+    <!-- PÁGINA 5: DETALHES DE COBRANÇA -->
+    <div class="page">
+        <div class="header">
+            <span class="logo">Rifa da Zika</span>
+            <span class="page-title">04. Cobrança e Pós-Venda</span>
+        </div>
+        <div class="content">
+            <h2>Como funciona a cobrança?</h2>
+            
+            <div class="card" style="margin-bottom: 1.2rem;">
+                <h3 style="color: var(--primary-dark);">Plano Profissional</h3>
+                <p style="font-size: 0.9rem;">A mensalidade fixa de R$ 100 é cobrada normalmente. A comissão de 2% de cada rifa finalizada é consolidada em uma fatura única mensal para facilitar a gestão financeira.</p>
+                <div class="table-title" style="font-size:0.85rem; margin-top:0.5rem;">Exemplo de Fatura Consolidada:</div>
+                <ul style="margin-bottom: 0; font-size: 0.85rem;">
+                    <li>Mensalidade fixa: R$ 100,00</li>
+                    <li>Rifas finalizadas no mês: R$ 196,00 (Ex: Rifa A: R$42 | Rifa B: R$96 | Rifa C: R$58)</li>
+                    <li><strong>Total da fatura mensal: R$ 296,00</strong></li>
+                </ul>
+            </div>
+
+            <div class="card" style="margin-bottom: 1.2rem;">
+                <h3 style="color: var(--gray);">Plano Avulso</h3>
+                <p style="font-size: 0.9rem;">Ao finalizar uma rifa, é gerada uma cobrança única de 8% do valor arrecadado. Após a confirmação:</p>
+                <ul style="margin-bottom: 0; font-size: 0.85rem;">
+                    <li>A campanha e seu histórico permanecem disponíveis para consulta.</li>
+                    <li>O vídeo do sorteio e relatórios continuam acessíveis para download.</li>
+                    <li>A plataforma fica livre para você criar a sua próxima campanha.</li>
+                </ul>
+            </div>
+
+            <p style="text-align: center; margin-top: 1.5rem; font-weight: 600; color: var(--primary-dark);">
+                Modernize seu negócio, conquiste seus clientes e aumente suas vendas com a Rifa da Zika!
+            </p>
+        </div>
+        <div class="footer">
+            <span>Proposta Rifa da Zika</span>
+            <span>Página 5 de 5</span>
         </div>
     </div>
 
