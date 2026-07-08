@@ -49,14 +49,19 @@ function LoginPage() {
           </span>
           <span className="font-display text-xl font-bold">CampanhaFácil</span>
         </Link>
-        <div>
+        <div className="space-y-6">
           <h2 className="font-display text-4xl font-extrabold leading-tight">
-            Transparência e organização em cada número.
+            Gestão simplificada de campanhas promocionais.
           </h2>
-          <p className="mt-4 text-lg text-white/85">
-            Mais de 10 mil pessoas já participaram das nossas campanhas.
-            Cadastre-se e concorra hoje.
-          </p>
+          
+          <div className="rounded-xl border border-white/20 bg-white/5 p-6 backdrop-blur-sm max-w-lg">
+            <p className="text-base font-medium leading-relaxed text-white/95">
+              Plataforma privada de bolão recreativo entre amigos. Não operamos apostas comerciais, cassino online, depósitos, saques ou jogos de azar.
+            </p>
+            <p className="mt-4 text-sm font-semibold text-white/80 border-t border-white/10 pt-4">
+              Uso permitido apenas para maiores de 18 anos.
+            </p>
+          </div>
         </div>
         <div className="text-sm text-white/70">© 2026 CampanhaFácil</div>
       </div>

@@ -276,7 +276,7 @@ export function DrawExperienceModal({
     try {
       if (shareRef.current) imgUrl = await nodeToPng(shareRef.current);
     } catch {}
-    const text = `🎉 Resultado da rifa "${rifa.title}"!\nNúmero vencedor: ${String(draw.winnerNumber).padStart(3, "0")}\nGanhador: ${draw.winnerName ?? "—"}`;
+    const text = `🎉 Resultado da campanha "${rifa.title}"!\nNúmero vencedor: ${String(draw.winnerNumber).padStart(3, "0")}\nGanhador: ${draw.winnerName ?? "—"}`;
     await shareOnWhatsApp(text, imgUrl);
   };
 
@@ -323,7 +323,7 @@ export function DrawExperienceModal({
             </div>
             <div className="min-w-0">
               <div className="text-xs uppercase tracking-widest opacity-70">
-                RifasOnline
+                CampanhaFácil
               </div>
               <div className="truncate font-display text-lg font-bold">{rifa.title}</div>
             </div>

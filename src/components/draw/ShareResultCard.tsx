@@ -26,7 +26,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, Props>(function ShareR
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
           <Ticket className="h-8 w-8" />
         </div>
-        <div className="text-3xl font-black tracking-tight">RifasOnline</div>
+        <div className="text-3xl font-black tracking-tight">CampanhaFácil</div>
       </div>
 
       <div className="mt-12 flex-1">
@@ -72,7 +72,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, Props>(function ShareR
           <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-4">
             <QRCodeSVG value={nextRifaUrl} size={140} />
             <div className="text-xs font-bold uppercase text-emerald-700">
-              Próxima rifa
+              Próxima campanha
             </div>
           </div>
         )}
