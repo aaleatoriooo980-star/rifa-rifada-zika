@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRifas } from "@/context/RifasContext";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -173,6 +173,15 @@ function Sorteios() {
   const [openRifa, setOpenRifa] = useState<string | null>(null);
   const [confirmCloseId, setConfirmCloseId] = useState<string | null>(null);
   const [presentation, setPresentation] = useState(false);
+  const [, setTick] = useState(0);
+
+  // Force re-render every second so the 'Realizar Sorteio' button becomes active exactly when target time passes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const visible = rifas.filter((r) => !r.archived);
   const activeRifa = visible.find((r) => r.id === openRifa);
