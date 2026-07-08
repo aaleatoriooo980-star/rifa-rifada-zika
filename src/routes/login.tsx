@@ -56,7 +56,7 @@ function LoginPage() {
           
           <div className="rounded-xl border border-white/20 bg-white/5 p-6 backdrop-blur-sm max-w-lg">
             <p className="text-base font-medium leading-relaxed text-white/95">
-              Plataforma privada de bolão recreativo entre amigos. Não operamos apostas comerciais, cassino online, depósitos, saques ou jogos de azar.
+              Plataforma privada de campanha recreativa entre amigos. Não operamos apostas comerciais, cassino online, depósitos, saques ou jogos de azar.
             </p>
             <p className="mt-4 text-sm font-semibold text-white/80 border-t border-white/10 pt-4">
               Uso permitido apenas para maiores de 18 anos.
