@@ -56,10 +56,10 @@ function LoginPage() {
           
           <div className="rounded-xl border border-white/20 bg-white/5 p-6 backdrop-blur-sm max-w-lg">
             <p className="text-base font-medium leading-relaxed text-white/95">
-              Plataforma privada de bolão recreativo entre amigos. Não operamos apostas comerciais, cassino online, depósitos, saques ou jogos de azar.
+              Esta plataforma é uma ferramenta de gestão de campanhas promocionais numeradas. Os organizadores são exclusivamente responsáveis pela legalidade, autorização e execução de suas campanhas. Esta plataforma não possui vínculo com a Caixa Econômica Federal, Loteria Federal ou qualquer operação de apostas (bet).
             </p>
             <p className="mt-4 text-sm font-semibold text-white/80 border-t border-white/10 pt-4">
-              Uso permitido apenas para maiores de 18 anos.
+              Uso proibido para menores de 18 anos.
             </p>
           </div>
         </div>
