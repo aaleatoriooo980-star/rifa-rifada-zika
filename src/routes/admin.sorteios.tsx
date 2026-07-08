@@ -39,7 +39,7 @@ function CountdownLine({ target }: { target?: string }) {
   const c = useCountdown(target);
   if (!target) return <span className="text-muted-foreground">Sem data definida</span>;
   if (!c.ready) return <span className="text-muted-foreground">—</span>;
-  if (c.expired) return <span className="text-muted-foreground">Rifa Encerrada</span>;
+  if (c.expired) return <span className="text-muted-foreground">Campanha Encerrada</span>;
   const tone =
     c.totalMs < 60 * 60 * 1000
       ? "text-destructive"
@@ -236,7 +236,7 @@ function Sorteios() {
             <Card key={r.id} className="hover-elevate overflow-hidden p-0 shadow-soft">
               <div className="flex flex-col gap-4 p-4 sm:flex-row">
                 <div className="w-full shrink-0 sm:w-40">
-                  <AspectRatio ratio={4 / 3} className="overflow-hidden rounded-lg bg-muted">
+                  <AspectRatio ratio={1} className="overflow-hidden rounded-lg bg-muted">
                     <img
                       src={r.image}
                       alt={r.prize}
@@ -315,7 +315,7 @@ function Sorteios() {
                         onClick={() => setConfirmCloseId(r.id)}
                         className="w-full mt-2"
                       >
-                        <Lock className="mr-1 h-3.5 w-3.5" /> Encerrar Rifa
+                        <Lock className="mr-1 h-3.5 w-3.5" /> Encerrar Campanha
                       </Button>
                     )}
                     {!validation.ok && (
@@ -350,14 +350,14 @@ function Sorteios() {
       <ConfirmDialog
         open={!!confirmCloseId}
         onOpenChange={(o) => !o && setConfirmCloseId(null)}
-        title="Encerrar Rifa?"
-        description="Tem certeza que deseja encerrar esta rifa? Após o encerramento não será mais possível realizar compras."
+        title="Encerrar Campanha?"
+        description="Tem certeza que deseja encerrar esta campanha? Após o encerramento não será mais possível realizar compras."
         confirmLabel="Confirmar Encerramento"
         cancelLabel="Cancelar"
         onConfirm={() => {
           if (confirmCloseId) {
             closeRifa(confirmCloseId);
-            toast.success("Rifa encerrada com sucesso.");
+            toast.success("Campanha encerrada com sucesso.");
           }
           setConfirmCloseId(null);
         }}

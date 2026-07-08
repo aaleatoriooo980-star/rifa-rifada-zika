@@ -202,8 +202,8 @@ function Dashboard() {
                     formatter={(value: number) => [`R$ ${value.toFixed(2)}`, undefined]}
                   />
                   <Legend />
-                  <Bar dataKey="Balcão" fill="#22c55e" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="Online" fill="var(--primary)" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="Balcão" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="Online" fill="#10b981" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -256,7 +256,7 @@ function Dashboard() {
                             {o.status}
                           </Badge>
                           <Badge variant="outline" className="text-[10px] px-1 py-0 border-primary/20 bg-primary/5 text-primary">
-                            {o.origin === "balcao" ? "🏪 Balcão" : "🌐 Online"}
+                            {o.origin === "balcao" ? "Balcão" : "Online"}
                           </Badge>
                         </div>
                       </div>
@@ -282,7 +282,7 @@ function Dashboard() {
                         <div className="truncate text-sm font-medium flex items-center gap-2">
                           <span>{buyer?.name ?? "Usuário"} {buyer?.phone ? `(${buyer.phone})` : ""}</span>
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/20 bg-primary/5 text-primary">
-                            {o.origin === "balcao" ? "🏪 Balcão" : "🌐 Online"}
+                            {o.origin === "balcao" ? "Balcão" : "Online"}
                           </Badge>
                         </div>
                         <div className="truncate text-xs text-muted-foreground">
@@ -421,7 +421,7 @@ function Dashboard() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Origem</span>
                     <span className="font-medium text-foreground">
-                      {detailOrder.origin === "balcao" ? "🏪 Balcão" : "🌐 Online"}
+                      {detailOrder.origin === "balcao" ? "Balcão" : "Online"}
                     </span>
                   </div>
                   <div className="flex justify-between">

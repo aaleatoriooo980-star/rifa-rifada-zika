@@ -45,7 +45,7 @@ export function PackagesEditor({
 
   return (
     <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -55,7 +55,7 @@ export function PackagesEditor({
             Ofereça descontos para quem compra mais números. O comprador continua escolhendo os números manualmente.
           </p>
         </div>
-        <Button type="button" size="sm" variant="outline" onClick={add}>
+        <Button type="button" size="sm" variant="outline" onClick={add} className="shrink-0 self-start">
           <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar Pacote
         </Button>
       </div>

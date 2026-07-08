@@ -137,13 +137,13 @@ function drawLogo(ctx: CanvasRenderingContext2D, alpha: number, cy: number = H /
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = WHITE;
-  ctx.fillText("🎟", W / 2, cy - 80);
+  ctx.fillText("⭐", W / 2, cy - 80);
   ctx.font = "bold 56px system-ui, sans-serif";
   ctx.fillStyle = WHITE;
-  ctx.fillText("RifasOnline", W / 2, cy + 60);
+  ctx.fillText("CampanhaFácil", W / 2, cy + 60);
   ctx.font = "36px system-ui, sans-serif";
   ctx.fillStyle = WHITE70;
-  ctx.fillText("Plataforma de Rifas", W / 2, cy + 130);
+  ctx.fillText("Plataforma de Campanhas", W / 2, cy + 130);
   ctx.restore();
 }
 
