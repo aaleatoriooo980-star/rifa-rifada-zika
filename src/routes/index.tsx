@@ -96,6 +96,11 @@ function HomePage() {
       <footer className="border-t bg-muted/30 py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center gap-4 text-center text-sm text-muted-foreground">
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link to="/termos-de-uso" className="hover:text-foreground transition-colors">Termos de Uso</Link>
+              <Link to="/politica-de-privacidade" className="hover:text-foreground transition-colors">Política de Privacidade</Link>
+              <Link to="/aviso-legal" className="hover:text-foreground transition-colors">Aviso Legal</Link>
+            </div>
             <p className="max-w-2xl text-xs leading-relaxed">
               Esta plataforma é uma ferramenta de gestão de campanhas promocionais numeradas.
               Os organizadores são exclusivamente responsáveis pela legalidade, autorização e execução de suas campanhas.
