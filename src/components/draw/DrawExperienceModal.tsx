@@ -443,7 +443,7 @@ export function DrawExperienceModal({
                   </div>
                 </div>
                 <div className="grid gap-1 text-center text-sm opacity-90 px-4">
-                  <div>🏆 {rifa.prize}</div>
+                  <div>{rifa.prize}</div>
                   <div>Sorteado em {formatDateTime(draw.drawnAt)}</div>
                 </div>
 

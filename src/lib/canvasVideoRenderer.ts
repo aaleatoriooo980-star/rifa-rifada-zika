@@ -163,37 +163,37 @@ function drawRifaInfo(
     const imgSize = 340;
     ctx.save();
     ctx.beginPath();
-    ctx.roundRect(cx - imgSize / 2, baseY - 520, imgSize, imgSize, 24);
+    ctx.roundRect(cx - imgSize / 2, baseY - 260, imgSize, imgSize, 24);
     ctx.clip();
-    ctx.drawImage(rifaImg, cx - imgSize / 2, baseY - 520, imgSize, imgSize);
+    ctx.drawImage(rifaImg, cx - imgSize / 2, baseY - 260, imgSize, imgSize);
     ctx.restore();
     ctx.beginPath();
-    ctx.roundRect(cx - imgSize / 2, baseY - 520, imgSize, imgSize, 24);
+    ctx.roundRect(cx - imgSize / 2, baseY - 260, imgSize, imgSize, 24);
     ctx.strokeStyle = WHITE20;
     ctx.lineWidth = 3;
     ctx.stroke();
   } else {
     ctx.beginPath();
-    ctx.roundRect(cx - 170, baseY - 520, 340, 340, 24);
+    ctx.roundRect(cx - 170, baseY - 260, 340, 340, 24);
     ctx.fillStyle = WHITE10;
     ctx.fill();
     ctx.font = "120px system-ui";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("🎟", cx, baseY - 350);
+    ctx.fillText("*", cx, baseY - 90);
   }
 
   ctx.font = "bold 64px system-ui, sans-serif";
   ctx.fillStyle = WHITE;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  wrapText(ctx, data.rifaTitle, cx, baseY - 120, 900, 80);
+  wrapText(ctx, data.rifaTitle, cx, baseY + 140, 900, 80);
   ctx.font = "bold 44px system-ui, sans-serif";
   ctx.fillStyle = GOLD;
-  ctx.fillText("🏆 " + data.prize, cx, baseY + 60);
+  ctx.fillText(data.prize, cx, baseY + 320);
   ctx.font = "38px system-ui, sans-serif";
   ctx.fillStyle = WHITE70;
-  ctx.fillText("Sorteio: " + data.drawDate, cx, baseY + 140);
+  ctx.fillText("Sorteio: " + data.drawDate, cx, baseY + 400);
   ctx.restore();
 }
 
