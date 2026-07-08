@@ -295,18 +295,10 @@ function Sorteios() {
                       <Button
                         onClick={() => handleOpenDraw(r.id, false)}
                         disabled={!validation.ok}
-                        className="w-full sm:flex-1 bg-gradient-primary text-primary-foreground"
+                        className="w-full bg-gradient-primary text-primary-foreground"
                       >
                         <Sparkles className="mr-1 h-4 w-4" />
                         Realizar Sorteio
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => handleOpenDraw(r.id, true)}
-                        disabled={!validation.ok}
-                        className="w-full sm:w-auto"
-                      >
-                        <Presentation className="mr-1 h-4 w-4" /> Apresentação
                       </Button>
                     </div>
                     {r.status === "ativa" && (
