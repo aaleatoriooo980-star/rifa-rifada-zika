@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import type { Rifa } from "@/lib/types";
 
 export const Route = createFileRoute("/minhas-rifas")({
-  head: () => ({ meta: [{ title: "Minhas Rifas — RifasOnline" }] }),
+  head: () => ({ meta: [{ title: "Minhas Campanhas — CampanhaFácil" }] }),
   component: () => (
     <ProtectedRoute role="cliente">
       <MinhasRifas />
@@ -31,7 +31,7 @@ function CountBadge({ target }: { target?: string }) {
   if (c.expired)
     return (
       <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-        <Clock className="h-3 w-3" /> Rifa Encerrada
+        <Clock className="h-3 w-3" /> Campanha Encerrada
       </span>
     );
   const tone =
@@ -90,11 +90,11 @@ function MinhasRifas() {
 
   const statusOptions = [
     { value: "all", label: "Todas" },
-    { value: "abertas", label: "Rifas Abertas" },
-    { value: "encerradas", label: "Rifas Encerradas" },
+    { value: "abertas", label: "Campanhas Ativas" },
+    { value: "encerradas", label: "Campanhas Encerradas" },
   ];
   const rifaOptions = [
-    { value: "all", label: "Todas minhas rifas" },
+    { value: "all", label: "Todas minhas campanhas" },
     ...myRifas.map((x) => ({ value: x.rifa.id, label: x.rifa.title })),
   ];
 
@@ -107,7 +107,7 @@ function MinhasRifas() {
     <div className="min-h-screen bg-background">
       <PublicHeader />
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-        <h1 className="font-display text-3xl font-bold">Minhas Rifas</h1>
+        <h1 className="font-display text-3xl font-bold">Minhas Campanhas</h1>
         <p className="mt-1 text-muted-foreground">
           Acompanhe seus pedidos e resultados.
         </p>
@@ -124,8 +124,8 @@ function MinhasRifas() {
               value={rifaFilter}
               onChange={setRifaFilter}
               options={rifaOptions}
-              placeholder="Minhas Rifas"
-              searchPlaceholder="Pesquisar rifa..."
+              placeholder="Minhas Campanhas"
+              searchPlaceholder="Pesquisar campanha..."
             />
           </div>
         )}
@@ -138,10 +138,10 @@ function MinhasRifas() {
                 Você ainda não comprou números
               </h2>
               <p className="max-w-md text-muted-foreground">
-                Explore as rifas ativas e escolha seus números da sorte.
+                Explore as campanhas ativas e escolha seus números da sorte.
               </p>
               <Button asChild className="bg-gradient-primary text-primary-foreground">
-                <Link to="/">Ver rifas</Link>
+                <Link to="/">Ver campanhas</Link>
               </Button>
             </CardContent>
           </Card>
@@ -203,7 +203,7 @@ function MinhasRifas() {
             })}
             {filtered.length === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                Nenhuma rifa nesse filtro.
+                Nenhuma campanha nesse filtro.
               </p>
             )}
           </div>
@@ -215,7 +215,7 @@ function MinhasRifas() {
           <SheetHeader>
             <SheetTitle>{detail?.title}</SheetTitle>
             <SheetDescription>
-              {detailNumbers.length} número(s) desta rifa.
+              {detailNumbers.length} número(s) desta campanha.
             </SheetDescription>
           </SheetHeader>
           {detail && (
@@ -248,7 +248,7 @@ function MinhasRifas() {
               </div>
               <Button asChild className="w-full">
                 <Link to="/rifa/$id" params={{ id: detail.id }}>
-                  Abrir página da rifa
+                  Abrir página da campanha
                 </Link>
               </Button>
             </div>

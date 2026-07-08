@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { RifaCard } from "@/components/rifa/RifaCard";
@@ -10,11 +10,11 @@ import type { Rifa } from "@/lib/types";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Rifas Online — Prêmios incríveis, pagamento via PIX" },
+      { title: "CampanhaFácil — Campanhas Promocionais Numeradas" },
       {
         name: "description",
         content:
-          "Concorra a iPhones, motos, consoles e muito mais em rifas 100% online com sorteios transparentes.",
+          "Participe de campanhas promocionais numeradas 100% online com resultados transparentes e pagamento via PIX.",
       },
     ],
   }),
@@ -39,10 +39,10 @@ function HomePage() {
         <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5" /> Sorteios da Loteria Federal
+              <Sparkles className="h-3.5 w-3.5" /> Campanhas 100% online
             </div>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
-              Concorra a prêmios incríveis a partir de R$ 2,50
+              Concorra a prêmios incríveis participando das nossas campanhas
             </h1>
             <p className="mt-4 text-lg text-white/90">
               Escolha seus números, pague via PIX e torça pelo seu prêmio.
@@ -50,7 +50,7 @@ function HomePage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-6 text-sm">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5" /> Sorteios transparentes
+                <ShieldCheck className="h-5 w-5" /> Resultados transparentes
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="h-5 w-5" /> Pagamento instantâneo
@@ -64,10 +64,10 @@ function HomePage() {
         <div className="mb-8 flex items-end justify-between">
           <div>
             <h2 className="font-display text-2xl font-bold sm:text-3xl">
-              Rifas em destaque
+              Campanhas em destaque
             </h2>
             <p className="mt-1 text-muted-foreground">
-              {visible.filter((r) => r.status === "ativa").length} rifas ativas no momento
+              {visible.filter((r) => r.status === "ativa").length} campanha(s) ativa(s) no momento
             </p>
           </div>
         </div>
@@ -94,8 +94,20 @@ function HomePage() {
       )}
 
       <footer className="border-t bg-muted/30 py-8">
-        <div className="mx-auto max-w-7xl px-4 text-center text-sm text-muted-foreground sm:px-6 lg:px-8">
-          © 2026 RifasOnline · Demonstração MVP · Pagamentos PIX simulados
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center gap-4 text-center text-sm text-muted-foreground">
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link to="/termos-de-uso" className="hover:text-foreground transition-colors">Termos de Uso</Link>
+              <Link to="/politica-de-privacidade" className="hover:text-foreground transition-colors">Política de Privacidade</Link>
+              <Link to="/aviso-legal" className="hover:text-foreground transition-colors">Aviso Legal</Link>
+            </div>
+            <p className="max-w-2xl text-xs leading-relaxed">
+              ⚠️ Esta plataforma é uma ferramenta de gestão de campanhas promocionais numeradas.
+              Os organizadores são exclusivamente responsáveis pela legalidade, autorização e execução de suas campanhas.
+              Esta plataforma não possui vínculo com a Caixa Econômica Federal, Loteria Federal ou qualquer operação de apostas (bet).
+            </p>
+            <p>© 2026 CampanhaFácil · CNPJ: [a preencher] · Todos os direitos reservados</p>
+          </div>
         </div>
       </footer>
     </div>

@@ -81,14 +81,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "RifasOnline — Plataforma de rifas digitais" },
-      { name: "description", content: "Participe de rifas online com pagamento via PIX. Sorteios transparentes, prêmios incríveis." },
-      { property: "og:title", content: "RifasOnline — Plataforma de rifas digitais" },
-      { property: "og:description", content: "Participe de rifas online com pagamento via PIX. Sorteios transparentes, prêmios incríveis." },
+      { title: "CampanhaFácil — Gestão de Campanhas Promocionais" },
+      { name: "description", content: "Plataforma de gestão de campanhas promocionais numeradas para estabelecimentos. Pagamento via PIX, resultados transparentes." },
+      { property: "og:title", content: "CampanhaFácil — Gestão de Campanhas Promocionais" },
+      { property: "og:description", content: "Plataforma de gestão de campanhas promocionais numeradas para estabelecimentos. Pagamento via PIX, resultados transparentes." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "RifasOnline — Plataforma de rifas digitais" },
-      { name: "twitter:description", content: "Participe de rifas online com pagamento via PIX. Sorteios transparentes, prêmios incríveis." },
+      { name: "twitter:title", content: "CampanhaFácil — Gestão de Campanhas Promocionais" },
+      { name: "twitter:description", content: "Plataforma de gestão de campanhas promocionais numeradas para estabelecimentos. Pagamento via PIX, resultados transparentes." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/52MkcxcI4CeUo7toSHpKUtTAdTV2/social-images/social-1782568968370-Frame_1.webp" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/52MkcxcI4CeUo7toSHpKUtTAdTV2/social-images/social-1782568968370-Frame_1.webp" },
     ],
@@ -110,7 +110,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
@@ -122,6 +122,8 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+import { CookieConsent } from "@/components/common/CookieConsent";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -132,6 +134,7 @@ function RootComponent() {
           <PushBridge />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
+          <CookieConsent />
           <Toaster richColors position="top-right" closeButton />
         </RifasProvider>
       </AuthProvider>

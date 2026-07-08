@@ -4,11 +4,12 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Ticket } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/register")({
-  head: () => ({ meta: [{ title: "Criar conta — RifasOnline" }] }),
+  head: () => ({ meta: [{ title: "Criar conta — CampanhaFácil" }] }),
   component: RegisterPage,
 });
 
@@ -22,9 +23,14 @@ function RegisterPage() {
     phone: "",
     password: "",
   });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!acceptedTerms) {
+      toast.error("Você deve aceitar os Termos de Uso e a Política de Privacidade.");
+      return;
+    }
     if (users.some((u) => u.email.toLowerCase() === form.email.toLowerCase())) {
       toast.error("Já existe uma conta com este email");
       return;
@@ -41,7 +47,7 @@ function RegisterPage() {
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground">
             <Ticket className="h-5 w-5" />
           </span>
-          <span className="font-display text-lg font-bold">RifasOnline</span>
+          <span className="font-display text-lg font-bold">Campanha<span className="text-primary">Fácil</span></span>
         </Link>
 
         <div className="rounded-2xl bg-card p-6 sm:p-8 shadow-elevated">
@@ -106,8 +112,24 @@ function RegisterPage() {
                 className="mt-1.5"
               />
             </div>
+            <div className="flex items-start gap-3 mt-2">
+              <Checkbox
+                id="accept-terms"
+                checked={acceptedTerms}
+                onCheckedChange={(v) => setAcceptedTerms(!!v)}
+                className="mt-0.5"
+              />
+              <label htmlFor="accept-terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                Li e concordo com os{" "}
+                <Link to="/termos-de-uso" className="text-primary hover:underline" target="_blank">Termos de Uso</Link>
+                {" "}e a{" "}
+                <Link to="/politica-de-privacidade" className="text-primary hover:underline" target="_blank">Política de Privacidade</Link>
+                {" "}da CampanhaFácil.
+              </label>
+            </div>
             <Button
               type="submit"
+              disabled={!acceptedTerms}
               className="w-full bg-gradient-primary text-primary-foreground"
             >
               Criar conta

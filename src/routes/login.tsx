@@ -9,7 +9,7 @@ import { Ticket } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Entrar — RifasOnline" }] }),
+  head: () => ({ meta: [{ title: "Entrar — CampanhaFácil" }] }),
   component: LoginPage,
 });
 
@@ -47,18 +47,18 @@ function LoginPage() {
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
             <Ticket className="h-5 w-5" />
           </span>
-          <span className="font-display text-xl font-bold">RifasOnline</span>
+          <span className="font-display text-xl font-bold">CampanhaFácil</span>
         </Link>
         <div>
           <h2 className="font-display text-4xl font-extrabold leading-tight">
-            Sorte e transparência em cada número.
+            Transparência e organização em cada número.
           </h2>
           <p className="mt-4 text-lg text-white/85">
-            Mais de 10 mil pessoas já participaram das nossas rifas.
+            Mais de 10 mil pessoas já participaram das nossas campanhas.
             Cadastre-se e concorra hoje.
           </p>
         </div>
-        <div className="text-sm text-white/70">© 2026 RifasOnline</div>
+        <div className="text-sm text-white/70">© 2026 CampanhaFácil</div>
       </div>
 
       <div className="flex items-center justify-center bg-background p-6 sm:p-10">
@@ -67,12 +67,12 @@ function LoginPage() {
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground">
               <Ticket className="h-5 w-5" />
             </span>
-            <span className="font-display text-lg font-bold">RifasOnline</span>
+            <span className="font-display text-lg font-bold">CampanhaFácil</span>
           </Link>
 
           <h1 className="font-display text-3xl font-bold">Entrar</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Acesse sua conta para participar das rifas.
+            Acesse sua conta para participar das campanhas.
           </p>
 
           <form onSubmit={submit} className="mt-8 space-y-4">
@@ -118,11 +118,11 @@ function LoginPage() {
           <div className="grid gap-2 sm:grid-cols-2">
             <Card
               className="cursor-pointer border-dashed transition-all hover:border-primary hover:bg-primary/5"
-              onClick={() => quick("admin@rifas.com", "123456")}
+              onClick={() => quick("admin@campanhafacil.com", "123456")}
             >
               <CardContent className="p-3 text-center">
                 <div className="text-xs font-semibold uppercase text-primary">Admin</div>
-                <div className="mt-0.5 text-xs text-muted-foreground">admin@rifas.com</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">admin@campanhafacil.com</div>
               </CardContent>
             </Card>
             <Card

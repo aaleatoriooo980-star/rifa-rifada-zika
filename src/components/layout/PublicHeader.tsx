@@ -35,7 +35,7 @@ export function PublicHeader() {
             <Ticket className="h-5 w-5" />
           </span>
           <span className="font-display text-lg font-bold text-foreground">
-            Rifas<span className="text-primary">Online</span>
+            Campanha<span className="text-primary">Fácil</span>
           </span>
         </Link>
 
@@ -47,7 +47,7 @@ export function PublicHeader() {
             activeProps={{ className: "text-foreground" }}
             activeOptions={{ exact: true }}
           >
-            Rifas
+            Campanhas
           </Link>
           {user?.role === "cliente" && (
             <Link
@@ -55,7 +55,7 @@ export function PublicHeader() {
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               activeProps={{ className: "text-foreground" }}
             >
-              Minhas Rifas
+              Minhas Campanhas
             </Link>
           )}
           {user?.role === "admin" && (
@@ -105,7 +105,7 @@ export function PublicHeader() {
                   <DropdownMenuSeparator />
                   {user.role === "cliente" && (
                     <DropdownMenuItem onClick={() => navigate({ to: "/minhas-rifas" })}>
-                      <UserIcon className="mr-2 h-4 w-4" /> Minhas rifas
+                      <UserIcon className="mr-2 h-4 w-4" /> Minhas campanhas
                     </DropdownMenuItem>
                   )}
                   {user.role === "admin" && (
@@ -155,7 +155,7 @@ export function PublicHeader() {
             activeProps={{ className: "text-foreground font-semibold" }}
             activeOptions={{ exact: true }}
           >
-            Rifas
+            Campanhas
           </Link>
           {user?.role === "cliente" && (
             <Link
@@ -164,7 +164,7 @@ export function PublicHeader() {
               className="block text-sm font-medium text-muted-foreground py-2 hover:text-foreground"
               activeProps={{ className: "text-foreground font-semibold" }}
             >
-              Minhas Rifas
+              Minhas Campanhas
             </Link>
           )}
           {user?.role === "admin" && (
@@ -222,7 +222,7 @@ export function PublicHeader() {
 
       {pathname === "/" && (
         <div className="border-t bg-muted/30 py-2 text-center text-xs text-muted-foreground px-4">
-          Plataforma de rifas online · Pagamentos via PIX · Sorteios transparentes
+          Plataforma de campanhas promocionais · Pagamentos via PIX · Resultados transparentes
         </div>
       )}
     </header>

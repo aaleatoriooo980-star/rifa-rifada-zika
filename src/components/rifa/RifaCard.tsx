@@ -75,7 +75,7 @@ export function RifaCard({ rifa, sold, onOpenResult }: Props) {
           {!c.ready ? (
             <span className="tabular-nums">--d --h --m --s</span>
           ) : c.expired ? (
-            <span>Rifa Encerrada</span>
+            <span>Campanha Encerrada</span>
           ) : (
             <span className="tabular-nums">
               {String(c.days).padStart(2, "0")}d {String(c.hours).padStart(2, "0")}h{" "}
@@ -112,7 +112,7 @@ export function RifaCard({ rifa, sold, onOpenResult }: Props) {
             className="w-full bg-gradient-primary text-primary-foreground shadow-soft hover:opacity-90"
           >
             <Link to="/rifa/$id" params={{ id: rifa.id }}>
-              <Ticket className="mr-1 h-4 w-4" /> Ver Rifa
+              <Ticket className="mr-1 h-4 w-4" /> Ver Campanha
               <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>

@@ -9,9 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermosDeUsoRouteImport } from './routes/termos-de-uso'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as PoliticaDePrivacidadeRouteImport } from './routes/politica-de-privacidade'
 import { Route as MinhasRifasRouteImport } from './routes/minhas-rifas'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AvisoLegalRouteImport } from './routes/aviso-legal'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -23,9 +26,19 @@ import { Route as AdminRifasIndexRouteImport } from './routes/admin.rifas.index'
 import { Route as AdminRifasNovaRouteImport } from './routes/admin.rifas.nova'
 import { Route as AdminRifasIdRouteImport } from './routes/admin.rifas.$id'
 
+const TermosDeUsoRoute = TermosDeUsoRouteImport.update({
+  id: '/termos-de-uso',
+  path: '/termos-de-uso',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticaDePrivacidadeRoute = PoliticaDePrivacidadeRouteImport.update({
+  id: '/politica-de-privacidade',
+  path: '/politica-de-privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MinhasRifasRoute = MinhasRifasRouteImport.update({
@@ -36,6 +49,11 @@ const MinhasRifasRoute = MinhasRifasRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AvisoLegalRoute = AvisoLegalRouteImport.update({
+  id: '/aviso-legal',
+  path: '/aviso-legal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -92,9 +110,12 @@ const AdminRifasIdRoute = AdminRifasIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/aviso-legal': typeof AvisoLegalRoute
   '/login': typeof LoginRoute
   '/minhas-rifas': typeof MinhasRifasRoute
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/register': typeof RegisterRoute
+  '/termos-de-uso': typeof TermosDeUsoRoute
   '/admin/rifas': typeof AdminRifasRouteWithChildren
   '/admin/sorteios': typeof AdminSorteiosRoute
   '/admin/venda-balcao': typeof AdminVendaBalcaoRoute
@@ -106,9 +127,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/aviso-legal': typeof AvisoLegalRoute
   '/login': typeof LoginRoute
   '/minhas-rifas': typeof MinhasRifasRoute
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/register': typeof RegisterRoute
+  '/termos-de-uso': typeof TermosDeUsoRoute
   '/admin/sorteios': typeof AdminSorteiosRoute
   '/admin/venda-balcao': typeof AdminVendaBalcaoRoute
   '/rifa/$id': typeof RifaIdRoute
@@ -121,9 +145,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/aviso-legal': typeof AvisoLegalRoute
   '/login': typeof LoginRoute
   '/minhas-rifas': typeof MinhasRifasRoute
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/register': typeof RegisterRoute
+  '/termos-de-uso': typeof TermosDeUsoRoute
   '/admin/rifas': typeof AdminRifasRouteWithChildren
   '/admin/sorteios': typeof AdminSorteiosRoute
   '/admin/venda-balcao': typeof AdminVendaBalcaoRoute
@@ -138,9 +165,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/aviso-legal'
     | '/login'
     | '/minhas-rifas'
+    | '/politica-de-privacidade'
     | '/register'
+    | '/termos-de-uso'
     | '/admin/rifas'
     | '/admin/sorteios'
     | '/admin/venda-balcao'
@@ -152,9 +182,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/aviso-legal'
     | '/login'
     | '/minhas-rifas'
+    | '/politica-de-privacidade'
     | '/register'
+    | '/termos-de-uso'
     | '/admin/sorteios'
     | '/admin/venda-balcao'
     | '/rifa/$id'
@@ -166,9 +199,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/aviso-legal'
     | '/login'
     | '/minhas-rifas'
+    | '/politica-de-privacidade'
     | '/register'
+    | '/termos-de-uso'
     | '/admin/rifas'
     | '/admin/sorteios'
     | '/admin/venda-balcao'
@@ -182,19 +218,36 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AvisoLegalRoute: typeof AvisoLegalRoute
   LoginRoute: typeof LoginRoute
   MinhasRifasRoute: typeof MinhasRifasRoute
+  PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
   RegisterRoute: typeof RegisterRoute
+  TermosDeUsoRoute: typeof TermosDeUsoRoute
   RifaIdRoute: typeof RifaIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termos-de-uso': {
+      id: '/termos-de-uso'
+      path: '/termos-de-uso'
+      fullPath: '/termos-de-uso'
+      preLoaderRoute: typeof TermosDeUsoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-de-privacidade': {
+      id: '/politica-de-privacidade'
+      path: '/politica-de-privacidade'
+      fullPath: '/politica-de-privacidade'
+      preLoaderRoute: typeof PoliticaDePrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/minhas-rifas': {
@@ -209,6 +262,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aviso-legal': {
+      id: '/aviso-legal'
+      path: '/aviso-legal'
+      fullPath: '/aviso-legal'
+      preLoaderRoute: typeof AvisoLegalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -319,9 +379,12 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  AvisoLegalRoute: AvisoLegalRoute,
   LoginRoute: LoginRoute,
   MinhasRifasRoute: MinhasRifasRoute,
+  PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
   RegisterRoute: RegisterRoute,
+  TermosDeUsoRoute: TermosDeUsoRoute,
   RifaIdRoute: RifaIdRoute,
 }
 export const routeTree = rootRouteImport

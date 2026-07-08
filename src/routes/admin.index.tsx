@@ -102,7 +102,7 @@ function Dashboard() {
 
   const rifaOptions = useMemo(
     () => [
-      { value: "all", label: "Todas as rifas" },
+      { value: "all", label: "Todas as campanhas" },
       ...visible.map((r) => ({ value: r.id, label: r.title })),
     ],
     [visible],
@@ -128,9 +128,9 @@ function Dashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Ticket} label="Total de Rifas" value={totalRifas} tone="primary" />
-        <StatCard icon={CheckCircle2} label="Rifas Ativas" value={ativas} tone="success" />
-        <StatCard icon={XCircle} label="Rifas Encerradas" value={encerradas} tone="muted" />
+        <StatCard icon={Ticket} label="Total de Campanhas" value={totalRifas} tone="primary" />
+        <StatCard icon={CheckCircle2} label="Campanhas Ativas" value={ativas} tone="success" />
+        <StatCard icon={XCircle} label="Campanhas Encerradas" value={encerradas} tone="muted" />
         <StatCard
           icon={DollarSign}
           label="Total Arrecadado"
@@ -157,7 +157,7 @@ function Dashboard() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="shadow-soft">
           <CardContent className="p-5">
-            <h3 className="font-display font-semibold">Vendas por rifa</h3>
+            <h3 className="font-display font-semibold">Vendas por campanha</h3>
             <p className="mb-4 text-xs text-muted-foreground">
               Números vendidos por campanha
             </p>
@@ -181,7 +181,7 @@ function Dashboard() {
 
         <Card className="shadow-soft">
           <CardContent className="p-5">
-            <h3 className="font-display font-semibold">Balcão vs Online por rifa</h3>
+            <h3 className="font-display font-semibold">Balcão vs Online por campanha</h3>
             <p className="mb-4 text-xs text-muted-foreground">Receita por canal de venda (R$)</p>
             {receitaComparativa.length === 0 ? (
               <div className="flex h-60 items-center justify-center text-sm text-muted-foreground">
@@ -224,8 +224,8 @@ function Dashboard() {
                   value={rifaFilter}
                   onChange={setRifaFilter}
                   options={rifaOptions}
-                  placeholder="Filtrar por rifa"
-                  searchPlaceholder="Pesquisar rifa..."
+                  placeholder="Filtrar por campanha"
+                  searchPlaceholder="Pesquisar campanha..."
                 />
               </div>
             </div>
@@ -261,7 +261,7 @@ function Dashboard() {
                         </div>
                       </div>
                       <div className="text-xs space-y-1 pt-1.5 border-t">
-                        <div>Rifa: <span className="font-medium text-foreground">{rifa?.title}</span></div>
+                        <div>Campanha: <span className="font-medium text-foreground">{rifa?.title}</span></div>
                         <div>Números: <span className="font-medium text-foreground">{o.numbers.length} números</span></div>
                         <div>Valor Pago: <span className="font-medium text-foreground">{formatBRL(o.total)}</span></div>
                         <div>Data: <span className="font-medium text-foreground">{formatDateTime(o.createdAt)}</span></div>
@@ -370,7 +370,7 @@ function Dashboard() {
                       <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t mt-1">
                         <Button asChild variant="outline" size="sm" className="w-full sm:flex-1">
                           <Link to="/rifa/$id" params={{ id: r.id }}>
-                            Ver Rifa
+                            Ver Campanha
                           </Link>
                         </Button>
                         <Button asChild size="sm" className="w-full sm:flex-1 bg-gradient-primary text-primary-foreground">
@@ -384,7 +384,7 @@ function Dashboard() {
                 })}
               {visible.filter((r) => r.status === "ativa").length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Nenhuma rifa ativa no momento.
+                  Nenhuma campanha ativa no momento.
                 </p>
               )}
             </div>
@@ -415,7 +415,7 @@ function Dashboard() {
                     <span className="font-medium text-foreground">{buyer?.phone ?? "Sem telefone"}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Rifa</span>
+                    <span className="text-muted-foreground">Campanha</span>
                     <span className="font-medium text-foreground">{rifa?.title ?? "—"}</span>
                   </div>
                   <div className="flex justify-between">
