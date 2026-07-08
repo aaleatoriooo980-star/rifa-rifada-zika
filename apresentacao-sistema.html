@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apresentação do Sistema — CampanhaFácil</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--dark);
+            background-color: var(--light);
+            line-height: 1.6;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 10mm auto;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            page-break-after: always;
+        }
+
+        /* Cover Page styling */
+        .cover {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+        }
+
+        .cover-content {
+            margin: auto 0;
+        }
+
+        .logo-badge {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 24px;
+            border-radius: 99px;
+            display: inline-block;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 2rem;
+            color: #a5b4fc;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1px;
+            background: linear-gradient(to right, #ffffff, #c7d2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.35rem;
+            color: #94a3b8;
+            max-width: 500px;
+            margin: 0 auto 3rem auto;
+            font-weight: 300;
+        }
+
+        .cover-footer {
+            width: 100%;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        /* Inner Page styling */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .header .logo {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .header .page-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray);
+        }
+
+        .content {
+            flex-grow: 1;
+        }
+
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 1.5rem;
+            background-color: var(--primary);
+            border-radius: 99px;
+        }
+
+        p {
+            margin-bottom: 1.2rem;
+            color: #334155;
+            font-size: 1.05rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .card h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+            color: var(--primary-dark);
+        }
+
+        .badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 1rem;
+        }
+
+        .badge {
+            background: #e0e7ff;
+            color: var(--primary-dark);
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge.green {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Bullet lists */
+        ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #334155;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer {
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+            margin-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        /* Print overrides to enforce A4 sheets and strip web styling */
+        @media print {
+            body {
+                background: white;
+            }
+            .page {
+                margin: 0;
+                border: none;
+                box-shadow: none;
+                width: 210mm;
+                height: 297mm;
+                page-break-after: always;
+                border-radius: 0;
+            }
+            /* Hide print button during printing */
+            .print-btn {
+                display: none !important;
+            }
+        }
+
+        .print-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            border-radius: 99px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+        .print-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <button class="print-btn" onclick="window.print()">Salvar como PDF / Imprimir</button>
+
+    <!-- PAGE 1: COVER -->
+    <div class="page cover">
+        <div class="cover-content">
+            <div class="logo-badge">CAMPANHAFÁCIL</div>
+            <h1>Apresentação<br>do Sistema</h1>
+            <p class="subtitle">Plataforma premium para gestão de campanhas de prêmios, controle de vendas presenciais e online, e sorteios automatizados.</p>
+        </div>
+        <div class="cover-footer">
+            <span>© 2026 CampanhaFácil</span>
+            <span>Documento de Especificação Técnica e Funcional</span>
+        </div>
+    </div>
+
+    <!-- PAGE 2: INTRO & ARCHITECTURE -->
+    <div class="page">
+        <div class="header">
+            <span class="logo">CampanhaFácil</span>
+            <span class="page-title">01. Visão Geral & Arquitetura</span>
+        </div>
+        <div class="content">
+            <h2>Introdução ao Sistema</h2>
+            <p>O <strong>CampanhaFácil</strong> é uma solução completa para gerenciamento e venda de bilhetes de sorteios e prêmios. O sistema oferece uma interface robusta para administradores gerenciarem suas campanhas e uma interface intuitiva para clientes realizarem compras de números via PIX de forma rápida e segura.</p>
+            
+            <h2 style="margin-top: 2rem;">Arquitetura Tecnológica</h2>
+            <p>A aplicação foi construída utilizando modernas tecnologias de desenvolvimento web, garantindo alta performance, responsividade e estabilidade:</p>
+            
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Frontend Moderno</h3>
+                    <p>Interface responsiva baseada em React estruturada com roteamento dinâmico via TanStack Router para navegação suave e instantânea.</p>
+                    <div class="badge-list">
+                        <span class="badge">React</span>
+                        <span class="badge">TypeScript</span>
+                        <span class="badge">TanStack Router</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Visualizações & Mídia</h3>
+                    <p>Gráficos interativos em tempo real via Recharts e gerador de vídeos MP4 nativo usando Canvas API para compartilhamento rápido nas redes.</p>
+                    <div class="badge-list">
+                        <span class="badge">Recharts</span>
+                        <span class="badge">Canvas API</span>
+                        <span class="badge">MediaRecorder</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <span>Apresentação do Sistema — CampanhaFácil</span>
+            <span>Página 2 de 4</span>
+        </div>
+    </div>
+
+    <!-- PAGE 3: MAIN FEATURES -->
+    <div class="page">
+        <div class="header">
+            <span class="logo">CampanhaFácil</span>
+            <span class="page-title">02. Funcionalidades Core</span>
+        </div>
+        <div class="content">
+            <h2>Recursos Principais do Painel Admin</h2>
+            
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h3 style="display:flex; align-items:center; gap:8px;">
+                    Dashboard Financeiro e de Vendas
+                </h3>
+                <p>O painel administrativo consolida dados essenciais para o gestor em tempo real:</p>
+                <ul>
+                    <li><strong>Métricas Gerais:</strong> Total arrecadado, campanhas ativas, campanhas encerradas e total de bilhetes vendidos.</li>
+                    <li><strong>Gráfico Comparativo de Vendas:</strong> Visualização nítida comparando a receita gerada em Balcão (vendas físicas presenciais) vs. Online.</li>
+                    <li><strong>Gestão de Pacotes Promocionais:</strong> Editor dinâmico e flexível para criar descontos progressivos por quantidade de bilhetes comprados.</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3 style="display:flex; align-items:center; gap:8px;">
+                    Experiência de Sorteio Automatizada
+                </h3>
+                <p>O módulo de sorteio simula a escolha do ganhador com alto impacto visual:</p>
+                <ul>
+                    <li><strong>Modo Apresentação:</strong> Tela cheia otimizada para projetores ou transmissões ao vivo (Live streaming).</li>
+                    <li><strong>Geração Instantânea de Vídeos:</strong> O sistema compila automaticamente um vídeo da animação do sorteio com a foto do prêmio e dados do ganhador para exportação e postagem instantânea (Instagram/WhatsApp).</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer">
+            <span>Apresentação do Sistema — CampanhaFácil</span>
+            <span>Página 3 de 4</span>
+        </div>
+    </div>
+
+    <!-- PAGE 4: PROCESS FLOW & BENEFITS -->
+    <div class="page">
+        <div class="header">
+            <span class="logo">CampanhaFácil</span>
+            <span class="page-title">03. Fluxo de Operação</span>
+        </div>
+        <div class="content">
+            <h2>Fluxo de Compra e Sorteio</h2>
+            <p>O processo foi otimizado para minimizar fricção e garantir a máxima taxa de conversão:</p>
+            
+            <div style="margin: 2rem 0; border-left: 4px solid var(--primary); padding-left: 1.5rem;">
+                <p style="margin-bottom: 0.8rem;"><strong>1. Criação da Campanha:</strong> O administrador cadastra o prêmio, fotos, quantidade de números e define pacotes de desconto promocionais.</p>
+                <p style="margin-bottom: 0.8rem;"><strong>2. Venda Multicanal:</strong> Vendas são feitas online pelo próprio cliente ou fisicamente pelo operador de balcão (gerando o PIX Copia e Cola instantaneamente).</p>
+                <p style="margin-bottom: 0.8rem;"><strong>3. Encerramento & Sorteio:</strong> Atingido o prazo, o administrador realiza o sorteio na plataforma com animações 3D de contagem regressiva e confetes.</p>
+                <p><strong>4. Compartilhamento do Resultado:</strong> O sistema gera o vídeo ou banner em alta resolução e o administrador compartilha diretamente.</p>
+            </div>
+
+            <h2 style="margin-top: 2rem;">Vantagens da Solução</h2>
+            <div class="grid-2">
+                <div class="card" style="background:#f0fdf4; border-color:#bbf7d0;">
+                    <h3 style="color:#166534;">Operação Otimizada</h3>
+                    <p style="font-size: 0.95rem; color:#1e3f20;">Gestão unificada que reduz erros de contabilidade entre bilhetes físicos vendidos na loja e vendas online.</p>
+                </div>
+                <div class="card" style="background:#eff6ff; border-color:#bfdbfe;">
+                    <h3 style="color:#1e40af;">Marketing Eficiente</h3>
+                    <p style="font-size: 0.95rem; color:#1e293b;">Exportação automatizada de mídia poupa tempo com design de posts e agiliza a divulgação dos vencedores.</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <span>Apresentação do Sistema — CampanhaFácil</span>
+            <span>Página 4 de 4</span>
+        </div>
+    </div>
+
+</body>
+</html>
