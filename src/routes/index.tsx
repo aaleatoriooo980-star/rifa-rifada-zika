@@ -102,9 +102,10 @@ function HomePage() {
               <Link to="/aviso-legal" className="hover:text-foreground transition-colors">Aviso Legal</Link>
             </div>
             <p className="max-w-2xl text-xs leading-relaxed">
-              ⚠️ Esta plataforma é uma ferramenta de gestão de campanhas promocionais numeradas.
+              Esta plataforma é uma ferramenta de gestão de campanhas promocionais numeradas.
               Os organizadores são exclusivamente responsáveis pela legalidade, autorização e execução de suas campanhas.
               Esta plataforma não possui vínculo com a Caixa Econômica Federal, Loteria Federal ou qualquer operação de apostas (bet).
+              Uso proibido para menores de 18 anos.
             </p>
             <p>© 2026 CampanhaFácil · CNPJ: [a preencher] · Todos os direitos reservados</p>
           </div>
