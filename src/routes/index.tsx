@@ -107,7 +107,7 @@ function HomePage() {
               Esta plataforma não possui vínculo com a Caixa Econômica Federal, Loteria Federal ou qualquer operação de apostas (bet).
               Uso proibido para menores de 18 anos.
             </p>
-            <p>© 2026 CampanhaFácil · CNPJ: [a preencher] · Todos os direitos reservados</p>
+            <p>© 2026 CampanhaFácil · Todos os direitos reservados</p>
           </div>
         </div>
       </footer>
