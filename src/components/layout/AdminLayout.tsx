@@ -74,10 +74,8 @@ export function AdminLayout() {
       >
         <div className="flex h-16 items-center justify-between border-b pb-2">
           <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground">
-              <Ticket className="h-5 w-5" />
-            </span>
-            <span className="font-display font-bold">RifasOnline</span>
+            <img src="/logo.jpg" alt="Campanha Fácil" className="h-9 w-9 rounded-xl object-contain" style={{ mixBlendMode: 'multiply' }} />
+            <span className="font-display font-bold">CampanhaFácil</span>
           </div>
           <Button
             variant="ghost"
@@ -145,10 +143,8 @@ export function AdminLayout() {
       >
         <div className="flex h-16 items-center gap-2 border-b px-4 justify-between">
           <div className={cn("flex items-center gap-2 overflow-hidden transition-all duration-300", collapsed ? "w-0 opacity-0" : "w-auto opacity-100")}>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground">
-              <Ticket className="h-5 w-5" />
-            </span>
-            <span className="font-display font-bold whitespace-nowrap">RifasOnline</span>
+            <img src="/logo.jpg" alt="Campanha Fácil" className="h-9 w-9 shrink-0 rounded-xl object-contain" style={{ mixBlendMode: 'multiply' }} />
+            <span className="font-display font-bold whitespace-nowrap">CampanhaFácil</span>
           </div>
           <Button
             variant="ghost"

@@ -31,9 +31,7 @@ export function PublicHeader() {
     <header className="sticky top-0 z-40 border-b bg-card/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow">
-            <Ticket className="h-5 w-5" />
-          </span>
+          <img src="/logo.jpg" alt="Campanha Fácil" className="h-9 w-9 rounded-xl object-contain" style={{ mixBlendMode: 'multiply' }} />
           <span className="font-display text-lg font-bold text-foreground">
             Campanha<span className="text-primary">Fácil</span>
           </span>
