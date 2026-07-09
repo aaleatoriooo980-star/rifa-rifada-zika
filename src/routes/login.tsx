@@ -44,9 +44,7 @@ function LoginPage() {
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="hidden flex-col justify-between bg-gradient-hero p-12 text-primary-foreground lg:flex">
         <Link to="/" className="flex items-center gap-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
-            <Ticket className="h-5 w-5" />
-          </span>
+          <img src="/logo.jpg" alt="Campanha Fácil" className="h-10 w-10 rounded-xl object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
           <span className="font-display text-xl font-bold">CampanhaFácil</span>
         </Link>
         <div className="space-y-6">
