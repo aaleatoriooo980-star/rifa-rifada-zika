@@ -29,6 +29,12 @@ export interface RenderResult {
 export type RenderProgressCallback = (pct: number, label: string) => void;
 
 // ─── Device detection ─────────────────────────────────────────────────────────
+export function isIOS(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
 export function isIOSSafari(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
@@ -39,13 +45,13 @@ export function isIOSSafari(): boolean {
 export function isMobileDevice(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || isIOS();
 }
 
 function isSafariDesktop(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
-  return !!ua.match(/Safari/) && !ua.match(/Chrome/) && !ua.match(/iP(hone|ad|od)/i);
+  return !!ua.match(/Safari/) && !ua.match(/Chrome/) && !isIOS();
 }
 
 // ─── MIME detection — try native MP4 first ────────────────────────────────────
@@ -54,15 +60,21 @@ interface PickedMime {
   isNativeMp4: boolean;
 }
 
-function pickRecordingMime(): PickedMime | null {
+function pickRecordingMime(hasAudio: boolean): PickedMime | null {
   if (typeof MediaRecorder === "undefined") return null;
 
-  // Native MP4 — Chrome 94+ desktop and some Android versions
-  const mp4Candidates = [
-    "video/mp4;codecs=h264,aac",
-    "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
-    "video/mp4",
-  ];
+  // Native MP4 — Chrome 94+ desktop and some Android/iOS versions
+  const mp4Candidates = hasAudio
+    ? [
+        "video/mp4;codecs=h264,aac",
+        "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+        "video/mp4",
+      ]
+    : [
+        "video/mp4;codecs=h264",
+        "video/mp4;codecs=avc1.42E01E",
+        "video/mp4",
+      ];
   for (const m of mp4Candidates) {
     if (MediaRecorder.isTypeSupported(m)) {
       return { mime: m, isNativeMp4: true };
@@ -70,11 +82,17 @@ function pickRecordingMime(): PickedMime | null {
   }
 
   // WebM fallback (requires FFmpeg conversion)
-  const webmCandidates = [
-    "video/webm;codecs=vp9,opus",
-    "video/webm;codecs=vp8,opus",
-    "video/webm",
-  ];
+  const webmCandidates = hasAudio
+    ? [
+        "video/webm;codecs=vp9,opus",
+        "video/webm;codecs=vp8,opus",
+        "video/webm",
+      ]
+    : [
+        "video/webm;codecs=vp9",
+        "video/webm;codecs=vp8",
+        "video/webm",
+      ];
   for (const m of webmCandidates) {
     if (MediaRecorder.isTypeSupported(m)) {
       return { mime: m, isNativeMp4: false };
@@ -564,38 +582,69 @@ export async function renderDrawVideo(
   data: DrawVideoData,
   onProgress?: RenderProgressCallback,
 ): Promise<RenderResult | null> {
-  const picked = pickRecordingMime();
-  if (!picked) return null;
+  const isIOSDevice = isIOS();
+
+  // Set up AudioContext recording stream (skip on iOS due to WebKit MediaRecorder bugs with combined streams)
+  let audioCtx: AudioContext | null = null;
+  let audioDest: MediaStreamAudioDestinationNode | null = null;
+
+  if (!isIOSDevice) {
+    try {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioDest = audioCtx.createMediaStreamDestination();
+    } catch (e) {
+      console.error("AudioContext recording not supported:", e);
+    }
+  }
+
+  const hasAudio = !isIOSDevice && !!audioDest;
+  const picked = pickRecordingMime(hasAudio);
+  if (!picked) {
+    if (audioCtx) {
+      try { audioCtx.close(); } catch {}
+    }
+    return null;
+  }
 
   // Check canvas.captureStream availability (Safari desktop < 14)
   const testCanvas = document.createElement("canvas");
-  if (typeof (testCanvas as any).captureStream !== "function") return null;
+  if (typeof (testCanvas as any).captureStream !== "function") {
+    if (audioCtx) {
+      try { audioCtx.close(); } catch {}
+    }
+    return null;
+  }
 
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
 
+  // Style the canvas to be invisible but in the DOM so Safari actively renders it
+  canvas.style.position = "fixed";
+  canvas.style.left = "-9999px";
+  canvas.style.top = "0";
+  canvas.style.width = "1px";
+  canvas.style.height = "1px";
+  canvas.style.opacity = "0";
+  canvas.style.pointerEvents = "none";
+  canvas.style.zIndex = "-1000";
+  document.body.appendChild(canvas);
+
   let rifaImg: HTMLImageElement | null = null;
   if (data.rifaImage) {
-    try { rifaImg = await loadImage(data.rifaImage); } catch {}
+    try {
+      rifaImg = await loadImage(data.rifaImage);
+    } catch (err) {
+      console.warn("Failed to load rifa image, proceeding without it:", err);
+    }
   }
 
   const confettiParticles = makeConfetti();
-  
-  // Set up AudioContext recording stream
-  let audioCtx: AudioContext | null = null;
-  let audioDest: MediaStreamAudioDestinationNode | null = null;
-  try {
-    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    audioDest = audioCtx.createMediaStreamDestination();
-  } catch (e) {
-    console.error("AudioContext recording not supported:", e);
-  }
 
   const stream = (canvas as any).captureStream(FPS) as MediaStream;
   let combinedStream = stream;
-  if (audioDest) {
+  if (hasAudio && audioDest) {
     const audioTracks = audioDest.stream.getAudioTracks();
     if (audioTracks.length > 0) {
       combinedStream = new MediaStream([
@@ -623,8 +672,9 @@ export async function renderDrawVideo(
         try { audioCtx.close(); } catch {}
       }
 
-      // If native MP4 or mobile device: bypass FFmpeg conversion to prevent browser OOM (out of memory) crash on low-ram tablets/phones
-      // On mobile we deliver the raw WebM recording with a .mp4 extension and video/mp4 MIME type (compatible trick for WhatsApp/browsers)
+      // Cleanup canvas from DOM
+      try { canvas.remove(); } catch {}
+
       if (picked.isNativeMp4 || isMobileDevice()) {
         onProgress?.(100, "Pronto!");
         resolve({
@@ -644,41 +694,74 @@ export async function renderDrawVideo(
         });
         onProgress?.(100, "Pronto!");
         resolve({ blob: mp4Blob, filename: `sorteio-${ts}.mp4`, mimeType: "video/mp4", format: "mp4" });
-      } catch {
+      } catch (err) {
+        console.error("FFmpeg conversion failed, falling back to WebM:", err);
         // FFmpeg failed (likely no SharedArrayBuffer) — deliver WebM
         onProgress?.(100, "Pronto! (formato WebM)");
         resolve({ blob: rawBlob, filename: `sorteio-${ts}.webm`, mimeType: "video/webm", format: "webm" });
       }
     };
 
-    // Pre-schedule synthesized sound effect milestones
-    if (audioCtx && audioDest) {
+    // Pre-schedule synthesized sound effect milestones if audio is enabled
+    if (hasAudio && audioCtx && audioDest) {
       scheduleAudioForDraw(audioCtx, audioDest);
     }
 
-    recorder.start(200);
+    // Render the very first frame at t=0 before starting the recorder to avoid a blank/black frame
+    try {
+      renderFrameAt(ctx, 0, 0, data, rifaImg, confettiParticles);
+    } catch (err) {
+      console.error("Error drawing first frame:", err);
+    }
 
-    let frame = 0;
-    const frameInterval = 1000 / FPS;
-
-    const renderFrame = () => {
-      const t = frame / FPS;
-      const dt = 1 / FPS; // Constant dt for physics/confetti consistency
-      frame++;
-
-      const drawPct = Math.round((frame / totalFrames) * 50);
-      onProgress?.(Math.min(drawPct, 50), "Desenhando animação…");
-
-      renderFrameAt(ctx, t, dt, data, rifaImg, confettiParticles);
-
-      if (frame < totalFrames) {
-        setTimeout(renderFrame, frameInterval);
-      } else {
-        recorder.stop();
+    // Small delay to ensure the first frame is rendered on canvas
+    setTimeout(() => {
+      try {
+        recorder.start(200);
+      } catch (err) {
+        console.error("Error starting recorder:", err);
+        try { canvas.remove(); } catch {}
+        resolve(null);
+        return;
       }
-    };
 
-    setTimeout(renderFrame, frameInterval);
+      let frame = 0;
+      const frameInterval = 1000 / FPS;
+
+      const renderFrame = () => {
+        try {
+          const t = frame / FPS;
+          const dt = 1 / FPS; // Constant dt for physics/confetti consistency
+          frame++;
+
+          const drawPct = Math.round((frame / totalFrames) * 50);
+          onProgress?.(Math.min(drawPct, 50), "Desenhando animação…");
+
+          renderFrameAt(ctx, t, dt, data, rifaImg, confettiParticles);
+
+          if (frame < totalFrames) {
+            setTimeout(renderFrame, frameInterval);
+          } else {
+            // Wait 1000ms for Safari/Chrome encoder to catch up before stopping the recorder
+            setTimeout(() => {
+              try {
+                recorder.stop();
+              } catch (err) {
+                console.error("Error stopping recorder:", err);
+                try { canvas.remove(); } catch {}
+                resolve(null);
+              }
+            }, 1000);
+          }
+        } catch (err) {
+          console.error("Error in renderFrame loop:", err);
+          try { canvas.remove(); } catch {}
+          resolve(null);
+        }
+      };
+
+      setTimeout(renderFrame, frameInterval);
+    }, 50);
   });
 }
 
