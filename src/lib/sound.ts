@@ -14,6 +14,17 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
+export function initAudio() {
+  const a = ac();
+  if (a && a.state === "suspended") {
+    a.resume().catch(() => {});
+  }
+}
+
+export function getAudioContext(): AudioContext | null {
+  return ac();
+}
+
 export function setMuted(v: boolean) {
   muted = v;
 }

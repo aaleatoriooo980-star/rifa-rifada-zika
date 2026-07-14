@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { DrawExperienceModal } from "@/components/draw/DrawExperienceModal";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { initAudio } from "@/lib/sound";
 import { canDraw, eligibleDrawNumbers, isRifaClosed } from "@/lib/rifaStatus";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -70,6 +71,7 @@ function VideoHistorySection({
   const [regenerating, setRegenerating] = useState(false);
 
   const handleRegenerate = async () => {
+    initAudio();
     if (!isVideoSupported()) {
       toast.error("Seu dispositivo não suporta geração de vídeo. Use Chrome no Desktop ou Android.");
       return;
@@ -195,6 +197,7 @@ function Sorteios() {
       : undefined;
 
   const handleOpenDraw = (rifaId: string, presentationMode: boolean) => {
+    initAudio();
     const rifa = visible.find((r) => r.id === rifaId);
     if (!rifa) return;
     const eligible = eligibleDrawNumbers(numbers, rifaId, orders);

@@ -9,6 +9,8 @@
  * No getDisplayMedia / screen capture used anywhere.
  */
 
+import { getAudioContext } from "./sound";
+
 export interface DrawVideoData {
   rifaTitle: string;
   rifaImage: string;
@@ -582,38 +584,28 @@ export async function renderDrawVideo(
   data: DrawVideoData,
   onProgress?: RenderProgressCallback,
 ): Promise<RenderResult | null> {
-  const isIOSDevice = isIOS();
-
-  // Set up AudioContext recording stream (skip on iOS due to WebKit MediaRecorder bugs with combined streams)
-  let audioCtx: AudioContext | null = null;
+  // Use the shared AudioContext (already initialized/resumed on user click)
+  const audioCtx = getAudioContext();
   let audioDest: MediaStreamAudioDestinationNode | null = null;
 
-  if (!isIOSDevice) {
+  if (audioCtx) {
     try {
-      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume().catch(() => {});
+      }
       audioDest = audioCtx.createMediaStreamDestination();
     } catch (e) {
-      console.error("AudioContext recording not supported:", e);
+      console.error("AudioContext recording destination creation failed:", e);
     }
   }
 
-  const hasAudio = !isIOSDevice && !!audioDest;
+  const hasAudio = !!audioDest;
   const picked = pickRecordingMime(hasAudio);
-  if (!picked) {
-    if (audioCtx) {
-      try { audioCtx.close(); } catch {}
-    }
-    return null;
-  }
+  if (!picked) return null;
 
   // Check canvas.captureStream availability (Safari desktop < 14)
   const testCanvas = document.createElement("canvas");
-  if (typeof (testCanvas as any).captureStream !== "function") {
-    if (audioCtx) {
-      try { audioCtx.close(); } catch {}
-    }
-    return null;
-  }
+  if (typeof (testCanvas as any).captureStream !== "function") return null;
 
   const canvas = document.createElement("canvas");
   canvas.width = W;
@@ -667,10 +659,6 @@ export async function renderDrawVideo(
     recorder.onstop = async () => {
       const rawBlob = new Blob(chunks, { type: picked.mime });
       const ts = new Date().toISOString().replace(/[:.]/g, "-");
-
-      if (audioCtx) {
-        try { audioCtx.close(); } catch {}
-      }
 
       // Cleanup canvas from DOM
       try { canvas.remove(); } catch {}
